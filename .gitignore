@@ -12,3 +12,5 @@ tests/out.webm
 tests/out.mp4
 
 node_modules/
+
+.DS_Store

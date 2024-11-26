@@ -203,6 +203,12 @@ declare namespace LibAV {
          * Duration of this stream in seconds.
          */
         duration: number;
+
+        
+        start_time: number; 
+        start_timehi: number;
+
+        rotation: number;
     }
 
     /**
