@@ -7,7 +7,7 @@ FFMPEG_VERSION_MAJOR=7
 FFMPEG_VERSION_MINREV=1
 FFMPEG_VERSION=$(FFMPEG_VERSION_MAJOR).$(FFMPEG_VERSION_MINREV)
 LIBAVJS_VERSION_SUFFIX=
-LIBAVJS_VERSION_BASE=6.4
+LIBAVJS_VERSION_BASE=0.1
 LIBAVJS_VERSION=$(LIBAVJS_VERSION_BASE).$(FFMPEG_VERSION)$(LIBAVJS_VERSION_SUFFIX)
 LIBAVJS_VERSION_SHORT=$(LIBAVJS_VERSION_BASE).$(FFMPEG_VERSION_MAJOR)
 EMCC=emcc
@@ -917,10 +917,7 @@ build/inst/thr/cflags.txt:
 	mkdir -p build/inst/thr
 	echo -pthread -gsource-map > $@
 
-RELEASE_VARIANTS=\
-	default default-cli opus opus-af flac flac-af wav wav-af obsolete webm \
-	webm-cli webm-vp9 webm-vp9-cli vp8-opus vp8-opus-avf vp9-opus \
-	vp9-opus-avf av1-opus av1-opus-avf webcodecs webcodecs-avf
+RELEASE_VARIANTS=vrew
 
 release: extract
 	mkdir -p dist/release

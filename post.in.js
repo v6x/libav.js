@@ -1290,10 +1290,13 @@ function ff_init_demuxer_file(filename, fmt) {
             outStream.codec_id = AVCodecParameters_codec_id(codecpar);
 
             // Duration and related
+            outStream.start_time = AVStream_start_time(inStream);
+            outStream.start_timehi = AVStream_start_timehi(inStream);
             outStream.time_base_num = AVStream_time_base_num(inStream);
             outStream.time_base_den = AVStream_time_base_den(inStream);
             outStream.duration_time_base = AVStream_duration(inStream) + (AVStream_durationhi(inStream)*0x100000000);
             outStream.duration = outStream.duration_time_base * outStream.time_base_num / outStream.time_base_den;
+            outStream.rotation = avformat_get_rotation(inStream)
 
             streams.push(outStream);
         }
@@ -1380,6 +1383,7 @@ var ff_write_multi = Module.ff_write_multi = function(oc, pkt, inPackets, interl
 /* @types
  * ff_read_frame_multi@sync(
  *     fmt_ctx: number, pkt: number, opts?: {
+ *         index?: number, // INPUT stream index
  *         limit?: number, // OUTPUT limit, in bytes
  *         unify?: boolean, // If true, unify the packets into a single stream (called 0), so that the output is in the same order as the input
  *         copyoutPacket?: "default" // Version of ff_copyout_packet to use
@@ -1387,6 +1391,7 @@ var ff_write_multi = Module.ff_write_multi = function(oc, pkt, inPackets, interl
  * ): @promsync@[number, Record<number, Packet[]>]@
  * ff_read_frame_multi@sync(
  *     fmt_ctx: number, pkt: number, opts: {
+ *         index?: number, // INPUT stream index
  *         limit?: number, // OUTPUT limit, in bytes
  *         unify?: boolean, // If true, unify the packets into a single stream (called 0), so that the output is in the same order as the input
  *         copyoutPacket: "ptr" // Version of ff_copyout_packet to use
@@ -1412,6 +1417,11 @@ function ff_read_frame_multi(fmt_ctx, pkt, opts) {
         return av_read_frame(fmt_ctx, pkt).then(function(ret) {
             if (ret < 0)
                 return [ret, outPackets];
+
+            if(opts.index !== undefined && AVPacket_stream_index(pkt) !== opts.index) {
+                av_packet_unref(pkt);
+                return Promise.all([]).then(step);
+            }
 
             // And copy it out
             var packet = copyoutPacket(pkt);
