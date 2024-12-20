@@ -31,6 +31,9 @@
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
 #include "libavutil/version.h"
+ #include "libavutil/display.h"
+ #include "libavutil/dict.h"
+
 
 #define A(struc, type, field) \
     type struc ## _ ## field(struc *a) { return a->field; } \

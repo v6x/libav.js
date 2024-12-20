@@ -260,6 +260,7 @@
             ["avformat_seek_file_max", "number", ["number", "number", "number", "number"], {"async": true, "returnsErrno": true, "notypes": true}],
             ["avformat_seek_file_approx", "number", ["number", "number", "number", "number"], {"async": true, "returnsErrno": true, "notypes": true}],
             ["avformat_write_header", "number", ["number", "number"]],
+            ["avformat_get_rotation", "number", ["number"]],
             ["av_interleaved_write_frame", "number", ["number", "number"]],
             ["avio_open2_js", "number", ["string", "number", "number", "number"]],
             ["avio_close", "number", ["number"]],
@@ -320,6 +321,8 @@
                 "discard",
                 "duration",
                 "durationhi",
+                "start_time",
+                "start_timehi",
                 {"name": "time_base", "rational": true}
             ]]
         ],

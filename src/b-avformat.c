@@ -33,6 +33,7 @@ BA(AVStream *, streams)
 #define BL(type, field) AL(AVStream, type, field)
 B(AVCodecParameters *, codecpar)
 B(enum AVDiscard, discard)
+BL(int64_t, start_time)
 BL(int64_t, duration)
 #undef B
 #undef BL
@@ -57,6 +58,41 @@ int avformat_seek_file_approx(
     return avformat_seek_file(s, stream_index, INT64_MIN, ts, INT64_MAX, flags);
 }
 
+int avformat_get_rotation(AVStream *st) {
+    AVDictionaryEntry *tag = NULL;
+    const uint8_t *displaymatrix = NULL;
+    double rot = 0;
+    size_t side_data_size = 0;
+
+    if (!st) {
+        return AVERROR(EINVAL);
+    }
+
+    // check the metadata for rotation
+    tag = av_dict_get(st->metadata, "rotate", NULL, 0);
+    if (tag && tag->value) {
+        return fmod(360.0 + atoi(tag->value), 360.0);
+    }
+
+    // check side data
+    for (int i = 0; i < st->codecpar->nb_coded_side_data; i++) {
+        AVPacketSideData *side_data = &st->codecpar->coded_side_data[i];
+        if (side_data->type == AV_PKT_DATA_DISPLAYMATRIX) {
+            displaymatrix = side_data->data;
+            side_data_size = side_data->size;
+            break;
+        }
+    }
+
+    if (displaymatrix && side_data_size >= sizeof(int32_t) * 9) {
+        rot = av_display_rotation_get((int32_t *)displaymatrix);
+        rot = fmod(rot + 360.0, 360.0);
+        return (int)(rot + 0.5);
+    }
+
+    return 0;
+}
+
 AVFormatContext *avformat_alloc_output_context2_js(AVOutputFormat *oformat,
     const char *format_name, const char *filename)
 {
@@ -70,8 +106,16 @@ AVFormatContext *avformat_alloc_output_context2_js(AVOutputFormat *oformat,
 AVFormatContext *avformat_open_input_js(const char *url, AVInputFormat *fmt,
     AVDictionary *options)
 {
-    AVFormatContext *ret = NULL;
     AVDictionary** options_p = &options;
+    AVFormatContext *ret = avformat_alloc_context();
+
+    if (!ret) {
+        fprintf(stderr, "[avformat_open_input_js] Could not allocate AVFormatContext\n");
+        return NULL;
+    }
+
+    ret->flags |= (AVFMT_FLAG_GENPTS);
+
     int err = avformat_open_input(&ret, url, fmt, options_p);
     if (err < 0)
         fprintf(stderr, "[avformat_open_input_js] %s\n", av_err2str(err));
