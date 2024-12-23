@@ -57,6 +57,13 @@ declare namespace LibAV {
         pts?: number, ptshi?: number;
 
         /**
+         * Duration of the frame, in the same units as pts. 0 if unknown.
+         * Will always be set by libav.js, but libav.js will accept frames
+         * from outside that do not have this set.
+         */
+        duration?: number, durationhi?: number;
+
+        /**
          * Base for timestamps of this frame.
          */
         time_base_num?: number, time_base_den?: number;
