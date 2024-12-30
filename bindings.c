@@ -424,23 +424,33 @@ int avformat_seek_file_approx(
 
 int avformat_get_rotation(AVStream *st) {
     AVDictionaryEntry *tag = NULL;
-    uint8_t *displaymatrix = NULL;
     double rot = 0;
+
+    AVCodecParameters *codecpar = NULL;
+    uint8_t *displaymatrix = NULL;
     size_t side_data_size = 0;
 
     if (!st) {
         return AVERROR(EINVAL);
     }
 
-    // check the metadata for rotation
+    // check the AVStream#metadata for rotation
     tag = av_dict_get(st->metadata, "rotate", NULL, 0);
     if (tag && tag->value) {
         rot = fmod(360.0 + atoi(tag->value), 360.0);
         return (int)(rot + 0.5);
     }
 
-    // check side data
-    displaymatrix = av_stream_get_side_data(st, AV_PKT_DATA_DISPLAYMATRIX, &side_data_size);
+    // check the AVCodecParameters#coded_side_data
+    codecpar = st->codecpar;
+    for (int i = 0; i < codecpar->nb_coded_side_data; i++) {
+        if (codecpar->coded_side_data[i].type == AV_PKT_DATA_DISPLAYMATRIX) {
+            displaymatrix = codecpar->coded_side_data[i].data;
+            side_data_size = codecpar->coded_side_data[i].size;
+            break;
+        }
+    }
+
     if (displaymatrix && side_data_size >= sizeof(int32_t) * 9) {
         rot = av_display_rotation_get((int32_t *)displaymatrix);
         rot = fmod(rot + 360.0, 360.0);
