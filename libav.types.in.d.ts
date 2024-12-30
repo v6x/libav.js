@@ -578,6 +578,17 @@ declare namespace LibAV {
         AV_PKT_FLAG_DISCARD: number;
         AV_PKT_FLAG_TRUSTED: number;
         AV_PKT_FLAG_DISPOSABLE: number;
+        SWS_FAST_BILINEAR: number;
+        SWS_BILINEAR: number;
+        SWS_BICUBIC: number;
+        SWS_X: number;
+        SWS_POINT: number;
+        SWS_AREA: number;
+        SWS_BICUBLIN: number;
+        SWS_GAUSS: number;
+        SWS_SINC: number;
+        SWS_LANCZOS: number;
+        SWS_SPLINE: number;
         E2BIG: number;
         EPERM: number;
         EADDRINUSE: number;

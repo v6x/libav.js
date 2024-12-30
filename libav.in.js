@@ -281,6 +281,18 @@
     libavStatics.AV_PKT_FLAG_TRUSTED = 0x0008;
     libavStatics.AV_PKT_FLAG_DISPOSABLE = 0x0010;
 
+    // SWS flags
+    libavStatics.SWS_FAST_BILINEAR = 1;
+    libavStatics.SWS_BILINEAR = 2;
+    libavStatics.SWS_BICUBIC = 4;
+    libavStatics.SWS_X = 8;
+    libavStatics.SWS_POINT = 0x10;
+    libavStatics.SWS_AREA = 0x20;
+    libavStatics.SWS_BICUBLIN = 0x40;
+    libavStatics.SWS_GAUSS = 0x80;
+    libavStatics.SWS_SINC = 0x100;
+    libavStatics.SWS_LANCZOS = 0x200;
+    libavStatics.SWS_SPLINE = 0x400;
 
     // Errors
     enume(["E2BIG", "EPERM", "EADDRINUSE", "EADDRNOTAVAIL",
