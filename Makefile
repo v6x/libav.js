@@ -37,7 +37,7 @@ EFLAGS=\
 #	-s MALLOC=emmalloc-memvalidate \
 #	-s SAFE_HEAP=1
 
-all: build-default
+all: build-vrew
 
 include mk/*.mk
 
