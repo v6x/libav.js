@@ -86,6 +86,9 @@
     // Statics that are provided both by LibAV and by libav instances
     var libavStatics = {};
 
+    // Expose NULL as a constant 
+    libavStatics.NULL = 0;
+
     /* libav.js returns and takes 64-bit numbers as 32-bit pairs, so we
      * need conversion functions to use those */
     libavStatics.i64tof64 = function(lo, hi) {
@@ -169,6 +172,70 @@
         "AV_PIX_FMT_RGB555LE", "AV_PIX_FMT_BGR565BE",
         "AV_PIX_FMT_BGR565LE", "AV_PIX_FMT_BGR555BE",
         "AV_PIX_FMT_BGR555LE"], -1);
+
+    // AVCOL_PRIs
+    libavStatics.AVCOL_PRI_RESERVED0   = 0;
+    libavStatics.AVCOL_PRI_BT709       = 1;
+    libavStatics.AVCOL_PRI_UNSPECIFIED = 2;
+    libavStatics.AVCOL_PRI_RESERVED    = 3;
+    libavStatics.AVCOL_PRI_BT470M      = 4;
+    libavStatics.AVCOL_PRI_BT470BG     = 5;
+    libavStatics.AVCOL_PRI_SMPTE170M   = 6;
+    libavStatics.AVCOL_PRI_SMPTE240M   = 7;
+    libavStatics.AVCOL_PRI_FILM        = 8;
+    libavStatics.AVCOL_PRI_BT2020      = 9;
+    libavStatics.AVCOL_PRI_SMPTE428    = 10;
+    libavStatics.AVCOL_PRI_SMPTEST428_1 = libavStatics.AVCOL_PRI_SMPTE428;
+    libavStatics.AVCOL_PRI_SMPTE431    = 11;
+    libavStatics.AVCOL_PRI_SMPTE432    = 12;
+    libavStatics.AVCOL_PRI_EBU3213     = 22;
+    libavStatics.AVCOL_PRI_JEDEC_P22   = libavStatics.AVCOL_PRI_EBU3213;
+
+    // AVCOL_TRCs 
+    libavStatics.AVCOL_TRC_RESERVED0    = 0;
+    libavStatics.AVCOL_TRC_BT709        = 1;
+    libavStatics.AVCOL_TRC_UNSPECIFIED  = 2;
+    libavStatics.AVCOL_TRC_RESERVED     = 3;
+    libavStatics.AVCOL_TRC_GAMMA22      = 4;
+    libavStatics.AVCOL_TRC_GAMMA28      = 5;
+    libavStatics.AVCOL_TRC_SMPTE170M    = 6;
+    libavStatics.AVCOL_TRC_SMPTE240M    = 7;
+    libavStatics.AVCOL_TRC_LINEAR       = 8;
+    libavStatics.AVCOL_TRC_LOG          = 9;
+    libavStatics.AVCOL_TRC_LOG_SQRT     = 10;
+    libavStatics.AVCOL_TRC_IEC61966_2_4 = 11;
+    libavStatics.AVCOL_TRC_BT1361_ECG   = 12;
+    libavStatics.AVCOL_TRC_IEC61966_2_1 = 13;
+    libavStatics.AVCOL_TRC_BT2020_10    = 14;
+    libavStatics.AVCOL_TRC_BT2020_12    = 15;
+    libavStatics.AVCOL_TRC_SMPTE2084    = 16;
+    libavStatics.AVCOL_TRC_SMPTEST2084  = libavStatics.AVCOL_TRC_SMPTE2084;
+    libavStatics.AVCOL_TRC_SMPTE428     = 17;
+    libavStatics.AVCOL_TRC_SMPTEST428_1 = libavStatics.AVCOL_TRC_SMPTE428;
+    libavStatics.AVCOL_TRC_ARIB_STD_B67 = 18;
+    
+    // AVCOL_SPCs
+    libavStatics.AVCOL_SPC_RGB         = 0;
+    libavStatics.AVCOL_SPC_BT709       = 1;
+    libavStatics.AVCOL_SPC_UNSPECIFIED = 2;
+    libavStatics.AVCOL_SPC_RESERVED    = 3;
+    libavStatics.AVCOL_SPC_FCC         = 4;
+    libavStatics.AVCOL_SPC_BT470BG     = 5;
+    libavStatics.AVCOL_SPC_SMPTE170M   = 6;
+    libavStatics.AVCOL_SPC_SMPTE240M   = 7;
+    libavStatics.AVCOL_SPC_YCGCO       = 8;
+    libavStatics.AVCOL_SPC_YCOCG       = libavStatics.AVCOL_SPC_YCGCO;
+    libavStatics.AVCOL_SPC_BT2020_NCL  = 9;
+    libavStatics.AVCOL_SPC_BT2020_CL   = 10;
+    libavStatics.AVCOL_SPC_SMPTE2085   = 11;
+    libavStatics.AVCOL_SPC_CHROMA_DERIVED_NCL = 12;
+    libavStatics.AVCOL_SPC_CHROMA_DERIVED_CL = 13;
+    libavStatics.AVCOL_SPC_ICTCP       = 14;
+
+    // AVCOL_RANGEs
+    libavStatics.AVCOL_RANGE_UNSPECIFIED = 0;
+    libavStatics.AVCOL_RANGE_MPEG        = 1;
+    libavStatics.AVCOL_RANGE_JPEG        = 2;
 
     // AVIO_FLAGs
     libavStatics.AVIO_FLAG_READ = 1;
