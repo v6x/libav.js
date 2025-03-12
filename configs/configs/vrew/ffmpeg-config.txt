@@ -1,37 +1,42 @@
 --enable-protocol=data --enable-protocol=file
 --enable-filter=aresample
---enable-demuxer=ogg
---enable-muxer=ogg
 --enable-demuxer=matroska
 --enable-muxer=matroska --enable-muxer=webm
 --enable-demuxer=mov
 --enable-muxer=ipod
 --enable-muxer=mov
 --enable-muxer=mp4
---enable-parser=opus
---enable-libopus
---enable-decoder=libopus
---enable-bsf=opus_metadata
---enable-encoder=libopus
---enable-demuxer=flac
---enable-muxer=flac
---enable-parser=flac
---enable-decoder=flac
---enable-encoder=flac
---enable-decoder=pcm_s16le --enable-decoder=pcm_s24le
---enable-demuxer=wav
---enable-encoder=pcm_s16le --enable-encoder=pcm_s24le
---enable-muxer=wav
---enable-decoder=pcm_f32le
---enable-encoder=pcm_f32le
---enable-parser=aac
+--enable-demuxer=matroska
+--enable-muxer=matroska --enable-muxer=webm
 --enable-parser=vp8
 --enable-parser=vp9
 --enable-parser=av1
 --enable-parser=h264
 --enable-parser=hevc
+--enable-decoder=vp8
+--enable-decoder=vp9
+--enable-decoder=av1
+--enable-decoder=h264
+--enable-bsf=h264_metadata
+--enable-bsf=extract_extradata
+--enable-decoder=hevc
+--enable-bsf=hevc_metadata
+--enable-bsf=extract_extradata
+--enable-libopenh264
+--enable-decoder=libopenh264
+--enable-encoder=libopenh264
 --enable-bsf=extract_extradata
 --enable-bsf=vp9_metadata
 --enable-bsf=av1_metadata
 --enable-bsf=h264_metadata
 --enable-bsf=hevc_metadata
+--enable-filter=acompressor --enable-filter=adeclick --enable-filter=adeclip
+--enable-filter=aecho --enable-filter=afade --enable-filter=aformat
+--enable-filter=agate --enable-filter=alimiter --enable-filter=amix
+--enable-filter=apad --enable-filter=asettb --enable-filter=asplit
+--enable-filter=atempo --enable-filter=atrim --enable-filter=bandpass
+--enable-filter=bandreject --enable-filter=dynaudnorm --enable-filter=equalizer
+--enable-filter=loudnorm --enable-filter=pan --enable-filter=amix
+--enable-filter=volume --enable-filter=anull
+--enable-filter=scale
+--enable-protocol=jsfetch

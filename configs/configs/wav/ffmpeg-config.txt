@@ -1,7 +1,0 @@
---enable-protocol=data --enable-protocol=file
---enable-decoder=pcm_s16le --enable-decoder=pcm_s24le
---enable-demuxer=wav
---enable-encoder=pcm_s16le --enable-encoder=pcm_s24le
---enable-muxer=wav
---enable-decoder=pcm_f32le
---enable-encoder=pcm_f32le

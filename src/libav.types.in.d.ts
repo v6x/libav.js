@@ -57,6 +57,13 @@ declare namespace LibAV {
         pts?: number, ptshi?: number;
 
         /**
+         * Duration of the frame, in the same units as pts. 0 if unknown.
+         * Will always be set by libav.js, but libav.js will accept frames
+         * from outside that do not have this set.
+         */
+        duration?: number, durationhi?: number;
+
+        /**
          * Base for timestamps of this frame.
          */
         time_base_num?: number, time_base_den?: number;
@@ -385,6 +392,11 @@ declare namespace LibAV {
      */
     export interface LibAVStatic {
         /**
+         * Exposed NULL pointer.
+         */
+        readonly NULL: 0;
+
+        /**
          * Convert a pair of 32-bit integers representing a single 64-bit integer
          * into a 64-bit float. 64-bit floats are only sufficient for 53 bits of
          * precision, so for very large values, this is lossy.
@@ -520,6 +532,62 @@ declare namespace LibAV {
         AV_PIX_FMT_BGR565LE: number;
         AV_PIX_FMT_BGR555BE: number;
         AV_PIX_FMT_BGR555LE: number;
+        AVCOL_PRI_RESERVED0: number;
+        AVCOL_PRI_BT709: number;
+        AVCOL_PRI_UNSPECIFIED: number;
+        AVCOL_PRI_RESERVED: number;
+        AVCOL_PRI_BT470M: number;
+        AVCOL_PRI_BT470BG: number;
+        AVCOL_PRI_SMPTE170M: number;
+        AVCOL_PRI_SMPTE240M: number;
+        AVCOL_PRI_FILM: number;
+        AVCOL_PRI_BT2020: number;
+        AVCOL_PRI_SMPTE428: number;
+        AVCOL_PRI_SMPTEST428_1: number;
+        AVCOL_PRI_SMPTE431: number;
+        AVCOL_PRI_SMPTE432: number;
+        AVCOL_PRI_EBU3213: number;
+        AVCOL_PRI_JEDEC_P22: number;
+        AVCOL_TRC_RESERVED0: number;
+        AVCOL_TRC_BT709: number;
+        AVCOL_TRC_UNSPECIFIED: number;
+        AVCOL_TRC_RESERVED: number;
+        AVCOL_TRC_GAMMA22: number;
+        AVCOL_TRC_GAMMA28: number;
+        AVCOL_TRC_SMPTE170M: number;
+        AVCOL_TRC_SMPTE240M: number;
+        AVCOL_TRC_LINEAR: number;
+        AVCOL_TRC_LOG: number;
+        AVCOL_TRC_LOG_SQRT: number;
+        AVCOL_TRC_IEC61966_2_4: number;
+        AVCOL_TRC_BT1361_ECG: number;
+        AVCOL_TRC_IEC61966_2_1: number;
+        AVCOL_TRC_BT2020_10: number;
+        AVCOL_TRC_BT2020_12: number;
+        AVCOL_TRC_SMPTE2084: number;
+        AVCOL_TRC_SMPTEST2084: number;
+        AVCOL_TRC_SMPTE428: number;
+        AVCOL_TRC_SMPTEST428_1: number;
+        AVCOL_TRC_ARIB_STD_B67: number;
+        AVCOL_SPC_RGB: number;
+        AVCOL_SPC_BT709: number;
+        AVCOL_SPC_UNSPECIFIED: number;
+        AVCOL_SPC_RESERVED: number;
+        AVCOL_SPC_FCC: number;
+        AVCOL_SPC_BT470BG: number;
+        AVCOL_SPC_SMPTE170M: number;
+        AVCOL_SPC_SMPTE240M: number;
+        AVCOL_SPC_YCGCO: number;
+        AVCOL_SPC_YCOCG: number;
+        AVCOL_SPC_BT2020_NCL: number;
+        AVCOL_SPC_BT2020_CL: number;
+        AVCOL_SPC_SMPTE2085: number;
+        AVCOL_SPC_CHROMA_DERIVED_NCL: number;
+        AVCOL_SPC_CHROMA_DERIVED_CL: number;
+        AVCOL_SPC_ICTCP: number;
+        AVCOL_RANGE_UNSPECIFIED: number;
+        AVCOL_RANGE_MPEG: number;
+        AVCOL_RANGE_JPEG: number;
         AVIO_FLAG_READ: number;
         AVIO_FLAG_WRITE: number;
         AVIO_FLAG_READ_WRITE: number;
@@ -550,6 +618,17 @@ declare namespace LibAV {
         AV_PKT_FLAG_DISCARD: number;
         AV_PKT_FLAG_TRUSTED: number;
         AV_PKT_FLAG_DISPOSABLE: number;
+        SWS_FAST_BILINEAR: number;
+        SWS_BILINEAR: number;
+        SWS_BICUBIC: number;
+        SWS_X: number;
+        SWS_POINT: number;
+        SWS_AREA: number;
+        SWS_BICUBLIN: number;
+        SWS_GAUSS: number;
+        SWS_SINC: number;
+        SWS_LANCZOS: number;
+        SWS_SPLINE: number;
         E2BIG: number;
         EPERM: number;
         EADDRINUSE: number;

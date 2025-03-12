@@ -41,7 +41,7 @@ EFLAGS_THR=\
 #	-s MALLOC=emmalloc-memvalidate \
 #	-s SAFE_HEAP=1
 
-all: build-default
+all: build-vrew
 
 include mk/*.mk
 
@@ -190,10 +190,7 @@ build/inst/thr/cflags.txt:
 	mkdir -p build/inst/thr
 	echo -pthread -gsource-map > $@
 
-RELEASE_VARIANTS=\
-	default default-cli opus opus-af flac flac-af wav wav-af obsolete webm \
-	webm-cli webm-vp9 webm-vp9-cli vp8-opus vp8-opus-avf vp9-opus \
-	vp9-opus-avf av1-opus av1-opus-avf webcodecs webcodecs-avf
+RELEASE_VARIANTS=vrew
 
 RELEASE_SUFFIX=
 RELEASE_DIR=dist/release$(RELEASE_SUFFIX)
