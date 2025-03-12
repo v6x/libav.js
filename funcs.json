@@ -307,6 +307,8 @@
         "pict_type",
         "pts",
         "ptshi",
+        "duration",
+        "durationhi",
         { "name": "sample_aspect_ratio", "rational": true },
         "sample_rate",
         { "name": "time_base", "rational": true },
