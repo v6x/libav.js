@@ -40,3 +40,7 @@
 --enable-filter=volume --enable-filter=anull
 --enable-filter=scale
 --enable-protocol=jsfetch
+--enable-demuxer=mp3
+--enable-muxer=mp3
+--enable-libmp3lame
+--enable-encoder=libmp3lame
