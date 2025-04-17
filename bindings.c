@@ -472,6 +472,14 @@ int avformat_get_rotation(AVStream *st) {
     return 0;
 }
 
+double avstream_get_frame_rate(AVStream *st) {
+    AVRational fps = (st->avg_frame_rate.num != 0) 
+        ? st->avg_frame_rate
+        : st->r_frame_rate;
+    if (fps.den == 0) return 0.0;
+    return (double)fps.num / (double)fps.den;
+}
+
 /****************************************************************
  * libavfilter
  ***************************************************************/

@@ -170,6 +170,7 @@
     ["av_interleaved_write_frame", "number", ["number", "number"]],
     ["av_packet_make_writable", "number", ["number"]],
     ["av_pix_fmt_desc_get", "number", ["number"]],
+    ["avstream_get_frame_rate", "number", ["number"]],
     [
       "av_read_frame",
       "number",
