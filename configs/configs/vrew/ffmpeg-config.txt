@@ -44,3 +44,6 @@
 --enable-muxer=mp3
 --enable-libmp3lame
 --enable-encoder=libmp3lame
+--enable-ffmpeg --enable-ffprobe
+--enable-decoder=aac
+--enable-encoder=aac

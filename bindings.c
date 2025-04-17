@@ -68,6 +68,8 @@
 /* Not part of libav, just used to ensure a round trip to C for async purposes */
 void ff_nothing() {}
 
+extern int ffmpeg_main(int argc, char** argv);
+
 
 /****************************************************************
  * libavutil
