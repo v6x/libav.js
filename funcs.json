@@ -214,6 +214,7 @@
     ["ff_get_colorspace_name", "string", ["number"], { "nullable": true }],
     ["ff_get_pix_fmt_name", "string", ["number"], { "nullable": true }],
     ["ff_get_color_range_name", "string", ["number"], { "nullable": true }],
+    ["ff_get_stream_end_time", "number", ["number", "number"], { "async": true }],
 
     ["calloc", "number", ["number", "number"]],
     ["close", "number", ["number"]],

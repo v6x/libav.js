@@ -332,6 +332,23 @@ const char *ff_get_color_range_name(enum AVColorRange val) {
     return av_color_range_name(val);
 }
 
+double ff_get_stream_end_time(AVFormatContext* fmt_ctx, int stream_index) {
+    AVPacket *pkt = av_packet_alloc();
+    if (!pkt) return 0.0;
+    int64_t max_pts = 0;
+    AVRational tb = fmt_ctx->streams[stream_index]->time_base;
+
+    while (av_read_frame(fmt_ctx, pkt) >= 0) {
+        if (pkt->stream_index == stream_index && pkt->pts != AV_NOPTS_VALUE) {
+            if (pkt->pts > max_pts) max_pts = pkt->pts;
+        }
+        av_packet_unref(pkt);
+    }
+    av_packet_free(&pkt);
+
+    return max_pts * ((double)tb.num / tb.den);
+}
+
 
 /* AVPacket */
 #define B(type, field) A(AVPacket, type, field)
