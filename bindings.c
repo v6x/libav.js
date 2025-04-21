@@ -349,6 +349,20 @@ double ff_get_stream_end_time(AVFormatContext* fmt_ctx, int stream_index) {
     return max_pts * ((double)tb.num / tb.den);
 }
 
+const char *ff_get_timecode(AVFormatContext *fmt_ctx) {
+    AVDictionaryEntry *tag = av_dict_get(fmt_ctx->metadata, "timecode", NULL, 0);
+
+    if (tag)
+        return tag->value;
+
+    for (unsigned i = 0; i < fmt_ctx->nb_streams; i++) {
+        tag = av_dict_get(fmt_ctx->streams[i]->metadata, "timecode", NULL, 0);
+        if (tag)
+            return tag->value;
+    }
+    return NULL;
+}
+
 
 /* AVPacket */
 #define B(type, field) A(AVPacket, type, field)
