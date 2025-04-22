@@ -166,6 +166,16 @@ enum AVPacketSideDataType AVPacketSideData_type(AVPacketSideData *a, int idx) {
     return a[idx].type;
 }
 
+uint64_t av_channel_layout_default_mask(int nb)
+{
+    AVChannelLayout l;
+    av_channel_layout_default(&l, nb);
+
+    uint64_t mask = (l.order == AV_CHANNEL_ORDER_NATIVE) ? l.u.mask : 0;
+    av_channel_layout_uninit(&l);
+    return mask;
+}
+
 #if LIBAVJS_FULL_AVCODEC
 int avcodec_open2_js(
     AVCodecContext *avctx, const AVCodec *codec, AVDictionary *options

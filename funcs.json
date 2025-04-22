@@ -140,6 +140,7 @@
             ["av_packet_unref", null, ["number"]],
             ["av_shrink_packet", null, ["number", "number"]],
             ["ff_codecpar_new_side_data", "number", ["number", "number", "number"]],
+            ["av_channel_layout_default_mask", "number", ["number"]],
             ["LIBAVCODEC_VERSION_INT", "number", []]
         ],
 
