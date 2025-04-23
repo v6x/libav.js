@@ -362,7 +362,7 @@ double ff_get_media_duration(AVFormatContext* fmt_ctx) {
         if (!pkt) continue;
 
         if (av_read_frame(fmt_ctx, pkt) < 0) {
-            if (pkt->stream_index === (int)i && pkt->pts != AV_NOPTS_VALUE) {
+            if (pkt->stream_index == (int)i && pkt->pts != AV_NOPTS_VALUE) {
                 AVRational tb = st->time_base;
                 double sec = pkt->pts * ((double)tb.num / tb.den);
                 if (sec > max_fallback) max_fallback = sec;
@@ -386,6 +386,7 @@ const char *ff_get_timecode(AVFormatContext *fmt_ctx) {
             return tag->value;
     }
     return NULL;
+}
 uint64_t av_channel_layout_default_mask(int nb)
 {
     AVChannelLayout l;
