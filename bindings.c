@@ -334,7 +334,7 @@ const char *ff_get_color_range_name(enum AVColorRange val) {
     return av_color_range_name(val);
 }
 
-double ff_get_stream_end_time(AVFormatContext* fmt_ctx) {
+double ff_get_media_duration(AVFormatContext* fmt_ctx) {
     if (fmt_ctx->duration != AV_NOPTS_VALUE && fmt_ctx->duration > 0) {
         return fmt_ctx->duration / (double)AV_TIME_BASE;
     }
