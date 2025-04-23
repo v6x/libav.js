@@ -386,6 +386,14 @@ const char *ff_get_timecode(AVFormatContext *fmt_ctx) {
             return tag->value;
     }
     return NULL;
+uint64_t av_channel_layout_default_mask(int nb)
+{
+    AVChannelLayout l;
+    av_channel_layout_default(&l, nb);
+
+    uint64_t mask = (l.order == AV_CHANNEL_ORDER_NATIVE) ? l.u.mask : 0;
+    av_channel_layout_uninit(&l);
+    return mask;
 }
 
 
@@ -769,7 +777,6 @@ int av_compare_ts_js(
                tb_b = {tb_b_num, tb_b_den};
     return av_compare_ts(ts_a, tb_a, ts_b, tb_b);
 }
-
 
 /* Errors */
 #define ERR_BUF_SZ 256

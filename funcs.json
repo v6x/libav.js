@@ -185,6 +185,8 @@
     ["av_dict_free", null, ["number"]],
     ["av_dict_set_js", "number", ["number", "string", "string", "number"]],
 
+    ["av_channel_layout_default_mask", "number", ["number"]],
+
     [
       "sws_getContext",
       "number",
