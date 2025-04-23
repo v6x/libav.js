@@ -32,6 +32,8 @@
 #include <libavutil/dict.h>
 #include <libavutil/display.h>
 #include <libavutil/error.h>
+#include <libavutil/time.h>
+#include <libavutil/dict.h>
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
 #include "libavutil/version.h"
@@ -332,21 +334,44 @@ const char *ff_get_color_range_name(enum AVColorRange val) {
     return av_color_range_name(val);
 }
 
-double ff_get_stream_end_time(AVFormatContext* fmt_ctx, int stream_index) {
-    AVPacket *pkt = av_packet_alloc();
-    if (!pkt) return 0.0;
-    int64_t max_pts = 0;
-    AVRational tb = fmt_ctx->streams[stream_index]->time_base;
-
-    while (av_read_frame(fmt_ctx, pkt) >= 0) {
-        if (pkt->stream_index == stream_index && pkt->pts != AV_NOPTS_VALUE) {
-            if (pkt->pts > max_pts) max_pts = pkt->pts;
-        }
-        av_packet_unref(pkt);
+double ff_get_stream_end_time(AVFormatContext* fmt_ctx) {
+    if (fmt_ctx->duration != AV_NOPTS_VALUE && fmt_ctx->duration > 0) {
+        return fmt_ctx->duration / (double)AV_TIME_BASE;
     }
-    av_packet_free(&pkt);
 
-    return max_pts * ((double)tb.num / tb.den);
+    double max_sec = 0.0;
+    for (unsigned i = 0; i < fmt_ctx->nb_streams; i++) {
+        AVStream *st = fmt_ctx->streams[i];
+        if (st->duration != AV_NOPTS_VALUE && st->duration > 0) {
+            AVRational tb = st->time_base;
+            double sec = st->duration * ((double)tb.num / tb.den);
+            if (sec > max_sec) max_sec = sec;
+        }
+    }
+    if (max_sec > 0.0) {
+        return max_sec;
+    }
+
+    double max_fallback = 0.0;
+    for (unsigned i = 0; i < fmt_ctx->nb_streams; i++) {
+        AVStream *st = fmt_ctx->streams[i];
+        if (av_seek_frame(fmt_ctx, i, INT64_MAX, AVSEEK_FLAG_BACKWARD) < 0) 
+            continue;
+
+        AVPacket *pkt = av_packet_alloc();
+        if (!pkt) continue;
+
+        if (av_read_frame(fmt_ctx, pkt) < 0) {
+            if (pkt->stream_index === (int)i && pkt->pts != AV_NOPTS_VALUE) {
+                AVRational tb = st->time_base;
+                double sec = pkt->pts * ((double)tb.num / tb.den);
+                if (sec > max_fallback) max_fallback = sec;
+            }
+            av_packet_unref(pkt);
+        }
+        av_packet_free(&pkt);
+    }
+    return max_fallback;
 }
 
 const char *ff_get_timecode(AVFormatContext *fmt_ctx) {
