@@ -342,6 +342,9 @@ double ff_get_media_duration(AVFormatContext* fmt_ctx) {
     double max_sec = 0.0;
     for (unsigned i = 0; i < fmt_ctx->nb_streams; i++) {
         AVStream *st = fmt_ctx->streams[i];
+        if (st->codecpar->codec_type != AVMEDIA_TYPE_VIDEO) {
+            continue;
+        }
         if (st->duration != AV_NOPTS_VALUE && st->duration > 0) {
             AVRational tb = st->time_base;
             double sec = st->duration * ((double)tb.num / tb.den);
@@ -355,17 +358,22 @@ double ff_get_media_duration(AVFormatContext* fmt_ctx) {
     double max_fallback = 0.0;
     for (unsigned i = 0; i < fmt_ctx->nb_streams; i++) {
         AVStream *st = fmt_ctx->streams[i];
+        if (st->codecpar->codec_type != AVMEDIA_TYPE_VIDEO) {
+            continue;
+        }
         if (av_seek_frame(fmt_ctx, i, INT64_MAX, AVSEEK_FLAG_BACKWARD) < 0) 
             continue;
 
         AVPacket *pkt = av_packet_alloc();
         if (!pkt) continue;
 
-        if (av_read_frame(fmt_ctx, pkt) < 0) {
+        while ((av_read_frame(fmt_ctx, pkt)) == 0) {
             if (pkt->stream_index == (int)i && pkt->pts != AV_NOPTS_VALUE) {
                 AVRational tb = st->time_base;
                 double sec = pkt->pts * ((double)tb.num / tb.den);
-                if (sec > max_fallback) max_fallback = sec;
+                double duration_sec = pkt->duration * ((double)tb.num / tb.den);
+                double end_sec = sec + duration_sec;
+                if (end_sec > max_fallback) max_fallback = end_sec;
             }
             av_packet_unref(pkt);
         }
