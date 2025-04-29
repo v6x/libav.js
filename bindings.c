@@ -366,25 +366,17 @@ double ff_get_media_duration(AVFormatContext* fmt_ctx) {
 
         AVPacket *pkt = av_packet_alloc();
         if (!pkt) continue;
-        int64_t prev_pts = AV_NOPTS_VALUE;
 
         while (av_read_frame(fmt_ctx, pkt) == 0) {
             if (pkt->stream_index == (int)i && pkt->pts != AV_NOPTS_VALUE) {
                 AVRational tb = st->time_base;
                 double sec = pkt->pts * ((double)tb.num / tb.den);
-
-                double gap_sec = 0.0;
-                if (pkt->duration > 0) {
-                    gap_sec = pkt->duration * ((double)tb.num / tb.den);
-                } else if (prev_pts != AV_NOPTS_VALUE) {
-                    gap_sec = (pkt->pts - prev_pts) * ((double)tb.num / tb.den);
-                }
-
+                double duration_sec = pkt->duration * ((double)tb.num / tb.den);
+                double gap_sec = fmax(0.0, duration_sec);
                 double end_sec = sec + gap_sec;
                 if (end_sec > max_fallback) {
                     max_fallback = end_sec;
                 }
-                prev_pts = pkt->pts;
             }
             av_packet_unref(pkt);
         }
