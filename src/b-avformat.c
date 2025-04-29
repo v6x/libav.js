@@ -94,6 +94,79 @@ int avformat_get_rotation(AVStream *st) {
     return 0;
 }
 
+double ff_get_media_duration(AVFormatContext* fmt_ctx) {
+    if (fmt_ctx->duration != AV_NOPTS_VALUE && fmt_ctx->duration > 0) {
+        return fmt_ctx->duration / (double)AV_TIME_BASE;
+    }
+
+    double max_sec = 0.0;
+    for (unsigned i = 0; i < fmt_ctx->nb_streams; i++) {
+        AVStream *st = fmt_ctx->streams[i];
+        if (st->codecpar->codec_type != AVMEDIA_TYPE_VIDEO) {
+            continue;
+        }
+        if (st->duration != AV_NOPTS_VALUE && st->duration > 0) {
+            AVRational tb = st->time_base;
+            double sec = st->duration * ((double)tb.num / tb.den);
+            if (sec > max_sec) max_sec = sec;
+        }
+    }
+    if (max_sec > 0.0) {
+        return max_sec;
+    }
+
+    double max_fallback = 0.0;
+    for (unsigned i = 0; i < fmt_ctx->nb_streams; i++) {
+        AVStream *st = fmt_ctx->streams[i];
+        if (st->codecpar->codec_type != AVMEDIA_TYPE_VIDEO) {
+            continue;
+        }
+        if (av_seek_frame(fmt_ctx, i, INT64_MAX, AVSEEK_FLAG_BACKWARD) < 0)
+            continue;
+
+        AVPacket *pkt = av_packet_alloc();
+        if (!pkt) continue;
+
+        while (av_read_frame(fmt_ctx, pkt) == 0) {
+            if (pkt->stream_index == (int)i && pkt->pts != AV_NOPTS_VALUE) {
+                AVRational tb = st->time_base;
+                double sec = pkt->pts * ((double)tb.num / tb.den);
+                double duration_sec = pkt->duration * ((double)tb.num / tb.den);
+                double gap_sec = fmax(0.0, duration_sec);
+                double end_sec = sec + gap_sec;
+                if (end_sec > max_fallback) {
+                    max_fallback = end_sec;
+                }
+            }
+            av_packet_unref(pkt);
+        }
+        av_packet_free(&pkt);
+    }
+    return max_fallback;
+}
+
+const char *ff_get_timecode(AVFormatContext *fmt_ctx) {
+    AVDictionaryEntry *tag = av_dict_get(fmt_ctx->metadata, "timecode", NULL, 0);
+
+    if (tag)
+        return tag->value;
+
+    for (unsigned i = 0; i < fmt_ctx->nb_streams; i++) {
+        tag = av_dict_get(fmt_ctx->streams[i]->metadata, "timecode", NULL, 0);
+        if (tag)
+            return tag->value;
+    }
+    return NULL;
+}
+
+double avstream_get_frame_rate(AVStream *st) {
+    AVRational fps = (st->avg_frame_rate.num != 0) 
+        ? st->avg_frame_rate
+        : st->r_frame_rate;
+    if (fps.den == 0) return 0.0;
+    return (double)fps.num / (double)fps.den;
+}
+
 AVFormatContext *avformat_alloc_output_context2_js(AVOutputFormat *oformat,
     const char *format_name, const char *filename)
 {

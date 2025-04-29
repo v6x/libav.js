@@ -92,6 +92,21 @@ async function main() {
                     "};\n";
             }
 
+            if (decl[3] && decl[3].nullable) {
+                out += `var ${decl[0]}__raw_nullable = ${decl[0]}; ` +
+                    `${decl[0]} = Module.${decl[0]} = function() { ` +
+                    "var args = arguments; " +
+                    `var ret = ${decl[0]}__raw_nullable.apply(void 0, args); ` +
+                    "if (ret && ret.then) { " +
+                        "return ret.then(function(result) { " +
+                            "return result === 0 ? null : result; " +
+                        "}); " +
+                    "} " +
+                    "if (ret === 0) return null; " +
+                    "return ret; " +
+                    "};\n";
+            }
+
             if (decl[3] && decl[3].async) {
                 // Need to serialize async functions
                 out += `Module.${decl[0]} = function() { ` +

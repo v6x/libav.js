@@ -185,7 +185,7 @@ async function main() {
                 syncOut += `/**\n * ${desc}\n */\n`;
             }
 
-            const ret = decl[1] || "void";
+            const ret = (decl[1] || "void") + (decl[3] && decl[3].nullable ? " | null" : "");
             asyncOut += `${decl[0]}(${args}): Promise<${ret}>;\n`;
             syncOut += `${decl[0]}_sync(${args}): ${ret}`;
             if (decl[3] && decl[3].async)

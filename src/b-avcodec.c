@@ -195,6 +195,18 @@ void av_packet_rescale_ts_js(
     av_packet_rescale_ts(pkt, tb_src, tb_dst);
 }
 
+const char *ff_get_colorspace_name(enum AVColorSpace val) {
+    return av_color_space_name(val);
+}
+
+const char *ff_get_pix_fmt_name(enum AVPixelFormat val) {
+    return av_get_pix_fmt_name(val);
+}
+
+const char *ff_get_color_range_name(enum AVColorRange val) {
+    return av_color_range_name(val);
+}
+
 static const int LIBAVCODEC_VERSION_INT_V = LIBAVCODEC_VERSION_INT;
 #undef LIBAVCODEC_VERSION_INT
 int LIBAVCODEC_VERSION_INT() { return LIBAVCODEC_VERSION_INT_V; }

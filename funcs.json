@@ -271,6 +271,9 @@
             ["av_seek_frame", "number", ["number", "number", "number", "number"], {"async": true, "returnsErrno": true, "notypes": true}],
             ["av_write_frame", "number", ["number", "number"]],
             ["av_write_trailer", "number", ["number"]],
+            ["avstream_get_frame_rate", "number", ["number"]],
+            ["ff_get_media_duration", "number", ["number"], { "async": true }],
+            ["ff_get_timecode", "string", ["number"], { "async": true, "nullable": true }],
             ["LIBAVFORMAT_VERSION_INT", "number", []]
         ],
 
@@ -356,7 +359,10 @@
             ["avcodec_receive_frame", "number", ["number", "number"]],
             ["avcodec_receive_packet", "number", ["number", "number"]],
             ["avcodec_send_frame", "number", ["number", "number"]],
-            ["avcodec_send_packet", "number", ["number", "number"]]
+            ["avcodec_send_packet", "number", ["number", "number"]],
+            ["ff_get_colorspace_name", "string", ["number"], { "nullable": true }],
+            ["ff_get_pix_fmt_name", "string", ["number"], { "nullable": true }],
+            ["ff_get_color_range_name", "string", ["number"], { "nullable": true }]
         ],
 
         "meta": [
