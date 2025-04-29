@@ -23,8 +23,9 @@
   },
   "scripts": {
     "prebuild": "rimraf dist && bash prepare-emcc.sh",
-    "build": "bash -c 'source ./.emsdk/emsdk_env.sh && make build-vrew -j9'",
-    "release": "bash -c 'source ./.emsdk/emsdk_env.sh && make release -j9'",
+    "generate-makefile": "m4 Makefile.m4 > Makefile",
+    "build": "npm run generate-makefile && bash -c 'source ./.emsdk/emsdk_env.sh && make build-vrew -j9'",
+    "release": "npm run generate-makefile && bash -c 'source ./.emsdk/emsdk_env.sh && make release -j9'",
     "generate-config": "cd configs && CONFIG_CONTENT=$(cat ./configs/vrew/config.json) && ./mkconfig.js vrew \"$CONFIG_CONTENT\" && cd ..",
     "test": "npm run build && cd tests && node node-test.js --include-slow && node node-test.mjs"
   },

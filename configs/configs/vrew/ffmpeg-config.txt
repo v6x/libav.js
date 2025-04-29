@@ -44,6 +44,9 @@
 --enable-muxer=mp3
 --enable-libmp3lame
 --enable-encoder=libmp3lame
+--enable-ffmpeg --enable-ffprobe
+--enable-decoder=aac
+--enable-encoder=aac
 --enable-decoder=pcm_s16le --enable-decoder=pcm_s24le
 --enable-demuxer=wav
 --enable-encoder=pcm_s16le --enable-encoder=pcm_s24le

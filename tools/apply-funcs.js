@@ -102,6 +102,21 @@ function decls(f, meta) {
                 "}; ";
         }
 
+        if (decl[3] && decl[3].nullable) {
+            outp += `var ${decl[0]}__raw_nullable = ${decl[0]}; ` +
+                `${decl[0]} = Module.${decl[0]} = function() { ` +
+                "var args = arguments; " +
+                `var ret = ${decl[0]}__raw_nullable.apply(void 0, args); ` +
+                "if (ret && ret.then) { " +
+                    "return ret.then(function(result) { " +
+                        "return result === 0 ? null : result; " +
+                    "}); " +
+                "} " +
+                "if (ret === 0) return null; " +
+                "return ret; " +
+                "}; ";
+        }
+
         if (decl[3] && decl[3].async) {
             // Need to serialize async functions
             outp += `Module.${decl[0]} = function() { ` +
@@ -255,7 +270,9 @@ function decls(f, meta) {
             syncp += `/**\n * ${desc}\n */\n`;
         }
 
-        signature(decl[0], args, ret(decl[1]), decl[3] && decl[3].async);
+        const retType = ret(decl[1]) + (decl[3] && decl[3].nullable ? " | null" : "");
+
+        signature(decl[0], args, retType, decl[3] && decl[3].async);
     });
     accessors((decl, field) => {
         if (field && field.array) {
