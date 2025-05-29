@@ -665,10 +665,8 @@ int ff_extract_audio(const char *in_filename, const char *out_filename) {
         goto fail;
     }
 
-    if ((ret = avformat_alloc_output_context2(&out_fmt, NULL, NULL, out_filename)) < 0) {
-        ret = AVERROR_UNKNOWN;
-        goto fail;
-    }
+    if ((ret = avformat_alloc_output_context2(&out_fmt, NULL, NULL, out_filename)) < 0) goto fail;
+    
 
     AVStream *in_stream = in_fmt->streams[audio_stream_index];
     AVStream *out_stream = avformat_new_stream(out_fmt, NULL);
@@ -710,7 +708,7 @@ fail:
     {
         char errbuf[AV_ERROR_MAX_STRING_SIZE];
         av_strerror(ret, errbuf, sizeof(errbuf));
-        fprintf(stderr, "ff_extract_audio: error=%d (%s)\n", ret, errbuf);
+        fprintf(stderr, "ff_extract_audio: errorno=%d (%s)\n", ret, errbuf);
         cleanup(in_fmt, out_fmt);
     }
     return ret;
@@ -740,7 +738,6 @@ int ff_slice_audio(const char *in_filename, const char *out_filename, double sta
     int64_t seek_pts = (int64_t)(start_time * (double)in_stream->time_base.den / in_stream->time_base.num);
     ret = av_seek_frame(in_fmt, audio_stream_index, seek_pts, AVSEEK_FLAG_BACKWARD);
     if (ret < 0) {
-        fprintf(stderr, "ff_slice_audio seek: error=%d (%s)\n", ret, av_err2str(ret));
         goto fail;
     }
     avformat_flush(in_fmt);
@@ -796,7 +793,7 @@ fail:
     {
         char errbuf[AV_ERROR_MAX_STRING_SIZE];
         av_strerror(ret, errbuf, sizeof(errbuf));
-        fprintf(stderr, "ff_slice_audio: error=%d (%s)\n", ret, errbuf);
+        fprintf(stderr, "ff_slice_audio: errorno=%d (%s)\n", ret, errbuf);
         cleanup(in_fmt, out_fmt);
     }
     return ret;
