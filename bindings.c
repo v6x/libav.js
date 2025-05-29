@@ -678,6 +678,7 @@ int ff_extract_audio(const char *in_filename, const char *out_filename) {
     if (ret < 0) {
         goto fail;
     }
+    out_stream->codecpar->codec_tag = 0;
     out_stream->time_base = in_stream->time_base;
 
     if (!(out_fmt->oformat->flags & AVFMT_NOFILE)) {
@@ -755,6 +756,7 @@ int ff_slice_audio(const char *in_filename, const char *out_filename, double sta
     if (ret < 0) {
         goto fail;
     }
+    out_stream->codecpar->codec_tag = 0;
     out_stream->time_base = in_stream->time_base;
 
     if (!(out_fmt->oformat->flags & AVFMT_NOFILE)) {
