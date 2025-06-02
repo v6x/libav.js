@@ -51,3 +51,6 @@
 --enable-muxer=wav
 --enable-decoder=pcm_f32le
 --enable-encoder=pcm_f32le
+--enable-decoder=pcm_s32le
+--enable-decoder=pcm_u8
+--enable-decoder=mp3
