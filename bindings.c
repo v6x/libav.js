@@ -334,6 +334,19 @@ const char *ff_get_color_range_name(enum AVColorRange val) {
     return av_color_range_name(val);
 }
 
+const char *ff_get_input_format_name(AVFormatContext* fmt_ctx) {
+    return fmt_ctx->iformat ? fmt_ctx->iformat->name : NULL;
+}
+
+const char *ff_get_major_brand(AVFormatContext* fmt_ctx) {
+    AVDictionaryEntry *tag = NULL;
+    tag = av_dict_get(fmt_ctx->metadata, "major_brand", NULL, 0);
+
+    if (tag) return tag->value;
+
+    return NULL;
+}
+
 double ff_get_media_duration(AVFormatContext* fmt_ctx) {
     if (fmt_ctx->duration != AV_NOPTS_VALUE && fmt_ctx->duration > 0) {
         return fmt_ctx->duration / (double)AV_TIME_BASE;
