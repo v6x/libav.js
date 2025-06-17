@@ -274,6 +274,8 @@
             ["avstream_get_frame_rate", "number", ["number"]],
             ["ff_get_media_duration", "number", ["number"], { "async": true }],
             ["ff_get_timecode", "string", ["number"], { "async": true, "nullable": true }],
+            ["ff_get_input_format_name", "string", ["number"], { "nullable": true }],
+            ["ff_get_major_brand", "string", ["number"], { "nullable": true }],
             ["LIBAVFORMAT_VERSION_INT", "number", []]
         ],
 
