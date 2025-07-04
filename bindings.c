@@ -677,6 +677,12 @@ int ff_extract_audio(const char *in_filename, const char *out_filename) {
         goto fail;
     }
 
+    for (unsigned i = 0; i < in_fmt->nb_streams; i++) {
+        if (i != audio_stream_index) {
+            in_fmt->streams[i]->discard = AVDISCARD_ALL;
+        }
+    }
+
     if ((ret = avformat_alloc_output_context2(&out_fmt, NULL, NULL, out_filename)) < 0) goto fail;
 
 
