@@ -359,15 +359,21 @@ int ff_slice_audio(const char *in_filename, const char *out_filename, double sta
         goto fail;
     }
 
-    double end_time = start_time + duration;
+    int64_t base_pts = AV_NOPTS_VALUE;
+    int64_t duration_pts = (int64_t)(duration * (double)in_stream->time_base.den / in_stream->time_base.num);
+
     while (av_read_frame(in_fmt, &pkt) >= 0) {
         if (pkt.stream_index == audio_stream_index) {
-            double pts_time = pkt.pts * av_q2d(in_stream->time_base);
-            if (pts_time >= end_time) {
+            if (base_pts == AV_NOPTS_VALUE) {
+                base_pts = pkt.pts;
+            }
+
+            int64_t pts_time = (pkt.pts - base_pts);
+            if (pts_time >= duration_pts) {
                 av_packet_unref(&pkt);
                 break;
             }
-            if (pts_time >= start_time) {
+            if (pts_time >= 0) {
                 pkt.stream_index = out_stream->index;
                 av_interleaved_write_frame(out_fmt, &pkt);
             }
