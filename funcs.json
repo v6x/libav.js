@@ -237,7 +237,7 @@
     ["ffprobe_main", "number", ["number", "number"], { "async": true }],
 
     ["ff_slice_audio", "number", ["string", "string", "number", "number"], { "async": true }],
-    ["ff_extract_audio", "number", ["string", "string"], { "async": true }]
+    ["ff_extract_audio", "number", ["string", "string", "number"], { "async": true }] 
   ],
 
   "fs": [
