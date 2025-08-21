@@ -22,13 +22,14 @@ EFLAGS=\
 	--post-js build/post.js --extern-post-js extern-post.js \
 	-s "EXPORT_NAME='LibAVFactory'" \
 	-s "EXPORTED_FUNCTIONS=@build/exports.json" \
-	-s "EXPORTED_RUNTIME_METHODS=['ccall', 'cwrap', 'PThread']" \
+	-s "EXPORTED_RUNTIME_METHODS=['ccall', 'cwrap', 'PThread', 'addFunction', 'removeFunction']" \
 	-s MODULARIZE=1 \
 	-s STACK_SIZE=1048576 \
 	-s ASYNCIFY \
 	-s "ASYNCIFY_IMPORTS=['libavjs_wait_reader']" \
 	-s INITIAL_MEMORY=25165824 \
-	-s ALLOW_MEMORY_GROWTH=1
+	-s ALLOW_MEMORY_GROWTH=1 \
+	-s ALLOW_TABLE_GROWTH=1
 
 # For debugging:
 #EFLAGS+=\

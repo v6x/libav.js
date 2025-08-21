@@ -214,6 +214,12 @@ function decls(f, meta) {
 
     let outp = "", syncp = "";
 
+    outp += "addFunction(fn: (...args: any[]) => any, sig: string): number;\n" +
+        "removeFunction(ptr: number): void;\n";
+    syncp += "addFunction_sync(fn: (...args: any[]) => any, sig: string): number;\n" +
+        "removeFunction_sync(ptr: number): void;\n";
+
+
     function ret(x) {
         return (x === null) ? "void" : x;
     }

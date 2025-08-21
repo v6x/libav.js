@@ -657,7 +657,7 @@ void cleanup(AVFormatContext *in_fmt, AVFormatContext *out_fmt) {
     avformat_close_input(&in_fmt);
 }
 
-int ff_extract_audio(const char *in_filename, const char *out_filename) {
+int ff_extract_audio(const char *in_filename, const char *out_filename, void (*progress_cb)(int current, int total)) {
     AVFormatContext *in_fmt = NULL, *out_fmt = NULL;
     AVPacket pkt;
     int audio_stream_index = -1;
@@ -711,10 +711,31 @@ int ff_extract_audio(const char *in_filename, const char *out_filename) {
         goto fail;
     }
 
+    int64_t total_duration = 0;
+    if (in_stream->duration != AV_NOPTS_VALUE && in_stream->duration > 0) {
+        total_duration = in_stream->duration;
+    } else if (in_fmt->duration != AV_NOPTS_VALUE && in_fmt->duration > 0) {
+        total_duration = av_rescale_q(in_fmt->duration, AV_TIME_BASE_Q, in_stream->time_base);
+    }
+
+    int64_t processed_pts = 0;
+    int packet_count = 0;
+    const int progress_update_interval = 100;
+
     while (av_read_frame(in_fmt, &pkt) >= 0) {
         if (pkt.stream_index == audio_stream_index) {
             pkt.stream_index = out_stream->index;
             av_interleaved_write_frame(out_fmt, &pkt);
+            
+            if (pkt.pts != AV_NOPTS_VALUE) {
+                processed_pts = pkt.pts;
+            }
+            
+            packet_count++;
+            
+            if (progress_cb && packet_count % progress_update_interval == 0) {
+                progress_cb(processed_pts, total_duration);
+            }
         }
         av_packet_unref(&pkt);
     }
