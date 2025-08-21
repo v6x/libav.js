@@ -395,6 +395,91 @@ fail:
     return ret;
 }
 
+int convert_to_hls(const char* in_url, const char* playlist_path) {
+    AVFormatContext *in_fmt = NULL, *ofmt = NULL;
+    AVDictionary *mux_opts = NULL;
+    AVPacket pkt;
+    int ret = 0;
+
+    ret = avformat_open_input(&in_fmt, in_url, NULL, NULL);
+    if (ret < 0) {
+        fprintf(stderr, "avformat_open_input: errorno=%d (%s)\n", ret, av_err2str(ret));
+        goto end;
+    }
+    ret = avformat_find_stream_info(in_fmt, NULL);
+    if (ret < 0) {
+        fprintf(stderr, "avformat_find_stream_info: errorno=%d (%s)\n", ret, av_err2str(ret));
+        goto end;
+    }
+
+    ret = avformat_alloc_output_context2(&ofmt, NULL, "hls", playlist_path);
+    if (ret < 0) {
+        fprintf(stderr, "avformat_alloc_output_context2: errorno=%d (%s)\n", ret, av_err2str(ret));
+        goto end;
+    }
+
+    av_dict_set(&mux_opts, "hls_segment_type", "fmp4", 0);
+    av_dict_set(&mux_opts, "hls_playlist_type", "vod", 0);
+    av_dict_set(&mux_opts, "hls_fmp4_init_filename", "init.mp4", 0);
+
+    int v_idx = av_find_best_stream(in_fmt, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
+    if (v_idx < 0) { 
+        ret = AVERROR_STREAM_NOT_FOUND; 
+        goto end; 
+    }
+
+    AVStream *in_vst = in_fmt->streams[v_idx];
+    AVStream *out_vst = avformat_new_stream(ofmt, NULL);
+    if (!out_vst) { ret = AVERROR(ENOMEM); goto end; }
+
+    ret = avcodec_parameters_copy(out_vst->codecpar, in_vst->codecpar);
+    if (ret < 0) {
+        fprintf(stderr, "avcodec_parameters_copy: errorno=%d (%s)\n", ret, av_err2str(ret));
+        goto end;
+    }
+    out_vst->codecpar->codec_tag = 0;
+    out_vst->time_base = in_vst->time_base;
+
+    if (!(ofmt->oformat->flags & AVFMT_NOFILE)) {
+        ret = avio_open(&ofmt->pb, playlist_path, AVIO_FLAG_WRITE);
+        if (ret < 0) {
+            fprintf(stderr, "avio_open: errorno=%d (%s)\n", ret, av_err2str(ret));
+            goto end;
+        }
+    }
+    ret = avformat_write_header(ofmt, &mux_opts);
+    if (ret < 0) {
+        fprintf(stderr, "avformat_write_header: errorno=%d (%s)\n", ret, av_err2str(ret));
+        goto end;
+    }
+
+    av_dict_free(&mux_opts);
+
+    while (av_read_frame(in_fmt, &pkt) >= 0) {
+        if (pkt.stream_index == v_idx) {
+            av_packet_rescale_ts(&pkt, in_vst->time_base, out_vst->time_base);
+            pkt.stream_index = out_vst->index;
+            ret = av_interleaved_write_frame(ofmt, &pkt);
+            if (ret < 0) {
+                fprintf(stderr, "av_interleaved_write_frame: errorno=%d (%s)\n", ret, av_err2str(ret));
+            }
+        }
+        av_packet_unref(&pkt);
+    }
+
+    ret = av_write_trailer(ofmt);
+    if (ret < 0) {
+        fprintf(stderr, "av_write_trailer: errorno=%d (%s)\n", ret, av_err2str(ret));
+    }
+
+end:
+    if (ofmt && !(ofmt->oformat->flags & AVFMT_NOFILE) && ofmt->pb) avio_closep(&ofmt->pb);
+    if (ofmt) avformat_free_context(ofmt);
+    if (in_fmt) avformat_close_input(&in_fmt);
+    av_dict_free(&mux_opts);
+    return ret;
+}
+
 static const int LIBAVFORMAT_VERSION_INT_V = LIBAVFORMAT_VERSION_INT;
 #undef LIBAVFORMAT_VERSION_INT
 int LIBAVFORMAT_VERSION_INT() { return LIBAVFORMAT_VERSION_INT_V; }
