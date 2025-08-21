@@ -30,9 +30,9 @@ EFLAGS=\
 	-s WASM_BIGINT=0
 
 EFLAGS_NTHR=\
-	-s "EXPORTED_RUNTIME_METHODS=['ccall', 'cwrap', 'HEAPU8', 'HEAP8', 'HEAPU16', 'HEAP16', 'HEAPU32', 'HEAP32', 'HEAPF32']"
+	-s "EXPORTED_RUNTIME_METHODS=['ccall', 'cwrap', 'HEAPU8', 'HEAP8', 'HEAPU16', 'HEAP16', 'HEAPU32', 'HEAP32', 'HEAPF32', 'addFunction', 'removeFunction']"
 EFLAGS_THR=\
-	-s "EXPORTED_RUNTIME_METHODS=['ccall', 'cwrap', 'HEAPU8', 'HEAP8', 'HEAPU16', 'HEAP16', 'HEAPU32', 'HEAP32', 'HEAPF32', 'PThread']"
+	-s "EXPORTED_RUNTIME_METHODS=['ccall', 'cwrap', 'HEAPU8', 'HEAP8', 'HEAPU16', 'HEAP16', 'HEAPU32', 'HEAP32', 'HEAPF32', 'PThread', 'addFunction', 'removeFunction']"
 
 # For debugging:
 #EFLAGS+=\

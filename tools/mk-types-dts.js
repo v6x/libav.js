@@ -22,6 +22,12 @@ async function main() {
     const funcs = JSON.parse(await fs.readFile("funcs.json", "utf8"));
     let inp = await fs.readFile("src/libav.types.in.d.ts", "utf8");
     let asyncOut = "", syncOut = "";
+
+    asyncOut += "addFunction(fn: (...args: any[]) => any, sig: string): number;\n" +
+        "removeFunction(ptr: number): void;\n";
+    syncOut += "addFunction_sync(fn: (...args: any[]) => any, sig: string): number;\n" +
+        "removeFunction_sync(ptr: number): void;\n";
+
     const doxygen = JSON.parse(await fs.readFile("mk/doxygen.json", "utf8"));
 
     function paramNames() {

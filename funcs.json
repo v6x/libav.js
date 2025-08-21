@@ -277,10 +277,10 @@
             ["ff_get_input_format_name", "string", ["number"], { "nullable": true }],
             ["ff_get_major_brand", "string", ["number"], { "nullable": true }],
             ["ff_slice_audio", "number", ["string", "string", "number", "number"], { "async": true }],
-            ["ff_extract_audio", "number", ["string", "string"], { "async": true }],
+            ["ff_extract_audio", "number", ["string", "string", "number"], { "async": true }],
             ["convert_to_hls", "number", ["string", "string"], { "async": true }],
             ["LIBAVFORMAT_VERSION_INT", "number", []]
-        ],
+          ],
 
         "fs": [
             "createLazyFile",
