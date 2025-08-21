@@ -314,8 +314,13 @@ int ff_slice_audio(const char *in_filename, const char *out_filename, double sta
 
     for (unsigned i = 0; i < in_fmt->nb_streams; i++) {
         if (in_fmt->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
-            audio_stream_index = i;
-            break;
+            if (audio_stream_index < 0) {
+                audio_stream_index = i;
+            } else {
+                in_fmt->streams[i]->discard = AVDISCARD_ALL;
+            }
+        } else {
+            in_fmt->streams[i]->discard = AVDISCARD_ALL;
         }
     }
     if (audio_stream_index < 0) {
