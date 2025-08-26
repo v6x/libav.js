@@ -838,7 +838,7 @@ function ff_init_demuxer_file(filename, fmt) {
             outStream.time_base_den = AVStream_time_base_den(inStream);
 
             const durationlo = AVStream_duration(inStream) >>> 0;
-            const durationhi = AVStream_durationhi(inStream) >>> 0;
+            const durationhi = AVStream_durationhi(inStream);
             outStream.duration_time_base = durationlo + (durationhi*0x100000000);
             outStream.duration = outStream.duration_time_base * outStream.time_base_num / outStream.time_base_den;
             outStream.rotation = avformat_get_rotation(inStream);
