@@ -506,6 +506,7 @@ BL(int64_t, duration)
 #undef BL
 
 RAT(AVStream, time_base)
+RAT(AVStream, sample_aspect_ratio)
 
 int avformat_seek_file_min(
     AVFormatContext *s, int stream_index, int64_t ts, int flags
@@ -569,6 +570,14 @@ double avstream_get_frame_rate(AVStream *st) {
         : st->r_frame_rate;
     if (fps.den == 0) return 0.0;
     return (double)fps.num / (double)fps.den;
+}
+
+int avstream_get_sample_aspect_ratio_num(AVStream *st) {
+    return st->sample_aspect_ratio.num;
+}
+
+int avstream_get_sample_aspect_ratio_den(AVStream *st) {
+    return st->sample_aspect_ratio.den;
 }
 
 /****************************************************************
