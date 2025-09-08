@@ -171,6 +171,8 @@
     ["av_packet_make_writable", "number", ["number"]],
     ["av_pix_fmt_desc_get", "number", ["number"]],
     ["avstream_get_frame_rate", "number", ["number"]],
+    ["avstream_get_sample_aspect_ratio_num", "number", ["number"]],
+    ["avstream_get_sample_aspect_ratio_den", "number", ["number"]],
     [
       "av_read_frame",
       "number",
