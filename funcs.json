@@ -272,6 +272,8 @@
             ["av_write_frame", "number", ["number", "number"]],
             ["av_write_trailer", "number", ["number"]],
             ["avstream_get_frame_rate", "number", ["number"]],
+            ["avstream_get_sample_aspect_ratio_num", "number", ["number"]],
+            ["avstream_get_sample_aspect_ratio_den", "number", ["number"]],
             ["ff_get_media_duration", "number", ["number"], { "async": true }],
             ["ff_get_timecode", "string", ["number"], { "async": true, "nullable": true }],
             ["ff_get_input_format_name", "string", ["number"], { "nullable": true }],
