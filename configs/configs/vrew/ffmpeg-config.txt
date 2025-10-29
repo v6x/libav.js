@@ -1,5 +1,3 @@
---enable-protocol=data --enable-protocol=file
---enable-filter=aresample
 --enable-demuxer=matroska
 --enable-muxer=matroska --enable-muxer=webm
 --enable-demuxer=mov
@@ -38,5 +36,5 @@
 --enable-filter=bandreject --enable-filter=dynaudnorm --enable-filter=equalizer
 --enable-filter=loudnorm --enable-filter=pan --enable-filter=amix
 --enable-filter=volume --enable-filter=anull
---enable-filter=scale
+--enable-swscale --enable-filter=scale
 --enable-protocol=jsfetch
