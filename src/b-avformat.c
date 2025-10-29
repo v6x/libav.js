@@ -71,7 +71,8 @@ int avformat_get_rotation(AVStream *st) {
     // check the metadata for rotation
     tag = av_dict_get(st->metadata, "rotate", NULL, 0);
     if (tag && tag->value) {
-        return fmod(360.0 + atoi(tag->value), 360.0);
+        rot = fmod(360.0 + atoi(tag->value), 360.0);
+        return (int)(rot + 0.5);
     }
 
     // check side data

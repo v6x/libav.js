@@ -40,7 +40,9 @@ var ff_copyout_frame = Module.ff_copyout_frame = function(frame) {
         ptshi: AVFrame_ptshi(frame),
         time_base_num: AVFrame_time_base_num(frame),
         time_base_den: AVFrame_time_base_den(frame),
-        sample_rate: AVFrame_sample_rate(frame)
+        sample_rate: AVFrame_sample_rate(frame),
+        duration: AVFrame_duration(frame),
+        durationhi: AVFrame_durationhi(frame)
     };
 
     // FIXME: Need to support *every* format here
