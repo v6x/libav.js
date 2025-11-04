@@ -57,3 +57,8 @@
 --enable-decoder=pcm_u8
 --enable-decoder=mp3
 --enable-muxer=hls
+--enable-decoder=pcm_s16be
+--enable-decoder=pcm_s24le
+--enable-decoder=pcm_s24be
+--enable-decoder=pcm_s32be
+--enable-decoder=pcm_f32be
