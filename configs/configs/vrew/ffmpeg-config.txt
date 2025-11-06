@@ -63,4 +63,3 @@
 --enable-swscale --enable-filter=scale
 --enable-protocol=jsfetch
 --enable-muxer=hls
---enable-protocol=data --enable-protocol=file

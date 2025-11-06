@@ -15,6 +15,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 #include <malloc.h>
 
@@ -28,6 +29,11 @@
 #include "libavfilter/avfilter.h"
 #include "libavfilter/buffersink.h"
 #include "libavutil/avutil.h"
+#include <libavutil/dict.h>
+#include <libavutil/display.h>
+#include <libavutil/error.h>
+#include <libavutil/time.h>
+#include <libavutil/dict.h>
 #include "libavutil/opt.h"
 #include "libavutil/pixdesc.h"
 #include "libavutil/version.h"
@@ -38,7 +44,7 @@
 #define A(struc, type, field) \
     type struc ## _ ## field(struc *a) { return a->field; } \
     void struc ## _ ## field ## _s(struc *a, type b) { a->field = b; }
-
+ 
 #define AL(struc, type, field) \
     uint32_t struc ## _ ## field(struc *a) { return (uint32_t) a->field; } \
     uint32_t struc ## _ ## field ## hi(struc *a) { return (uint32_t) (a->field >> 32); } \
@@ -316,9 +322,6 @@ void *libavjs_create_main_thread() { return NULL; }
 
 #endif
 
-/****************************************************************
- * Other bindings
- ***************************************************************/
 #define ERR_BUF_SZ 256
 static char err_buf[ERR_BUF_SZ];
 

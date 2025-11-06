@@ -21,6 +21,7 @@ EFLAGS=\
 	--pre-js src/pre.js \
 	--extern-post-js src/extern-post.js \
 	-s "EXPORT_NAME='LibAVFactory'" \
+	-s ALLOW_TABLE_GROWTH=1
 	-s MODULARIZE=1 \
 	-s STACK_SIZE=1048576 \
 	-s ASYNCIFY \
