@@ -27,7 +27,7 @@ EFLAGS=\
 	-s "ASYNCIFY_IMPORTS=['libavjs_wait_reader', 'jsfetch_open_js', 'jsfetch_read_js', 'jsfetch_seek_js']" \
 	-s INITIAL_MEMORY=25165824 \
 	-s ALLOW_MEMORY_GROWTH=1 \
-	-s WASM_BIGINT=0
+	-s WASM_BIGINT=1
 
 EFLAGS_NTHR=\
 	-s "EXPORTED_RUNTIME_METHODS=['ccall', 'cwrap', 'HEAPU8', 'HEAP8', 'HEAPU16', 'HEAP16', 'HEAPU32', 'HEAP32', 'HEAPF32', 'addFunction', 'removeFunction']"
@@ -55,10 +55,6 @@ build-%: \
 	dist/libav-%.dbg.js \
 	dist/libav-$(LIBAVJS_VERSION)-%.dbg.mjs \
 	dist/libav-%.dbg.mjs \
-	dist/libav-$(LIBAVJS_VERSION)-%.asm.js \
-	dist/libav-$(LIBAVJS_VERSION)-%.asm.mjs \
-	dist/libav-$(LIBAVJS_VERSION)-%.dbg.asm.js \
-	dist/libav-$(LIBAVJS_VERSION)-%.dbg.asm.mjs \
 	dist/libav-$(LIBAVJS_VERSION)-%.wasm.js \
 	dist/libav-$(LIBAVJS_VERSION)-%.wasm.mjs \
 	dist/libav-$(LIBAVJS_VERSION)-%.dbg.wasm.js \
@@ -134,11 +130,6 @@ dist/libav-$(LIBAVJS_VERSION)-%.$2$1.$5: build/ffmpeg-$(FFMPEG_VERSION)/build-$3
 	rmdir $(@).d
 ]]])
 
-# asm.js version
-buildrule(asm, [[[]]], base, [[[$(EFLAGS_NTHR) $(EMFTFLAGS) -s WASM=0]]], js)
-buildrule(asm, [[[]]], base, [[[$(EFLAGS_NTHR) $(EMFTFLAGS) $(ES6FLAGS) -s WASM=0]]], mjs)
-buildrule(asm, dbg., base, [[[$(EFLAGS_NTHR) $(EMFTFLAGS) -g2 -s WASM=0]]], js)
-buildrule(asm, dbg., base, [[[$(EFLAGS_NTHR) $(EMFTFLAGS) -g2 $(ES6FLAGS) -s WASM=0]]], mjs)
 # wasm version with no added features
 buildrule(wasm, [[[]]], base, [[[$(EFLAGS_NTHR) $(EMFTFLAGS)]]], js)
 buildrule(wasm, [[[]]], base, [[[$(EFLAGS_NTHR) $(EMFTFLAGS) $(ES6FLAGS)]]], mjs)

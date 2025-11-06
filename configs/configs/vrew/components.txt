@@ -1,3 +1,10 @@
 c
 avutil
 swscale
+avformat
+avfcbridge
+avcodec
+avframe
+avfcbridge
+avbsf
+avfilter

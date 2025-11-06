@@ -6,11 +6,20 @@
 --enable-muxer=mp4
 --enable-demuxer=matroska
 --enable-muxer=matroska --enable-muxer=webm
+--enable-demuxer=mp3
+--enable-muxer=mp3
+--enable-decoder=pcm_s16le --enable-decoder=pcm_s24le
+--enable-demuxer=wav
+--enable-encoder=pcm_s16le --enable-encoder=pcm_s24le
+--enable-muxer=wav
+--enable-demuxer=flac
+--enable-muxer=flac
 --enable-parser=vp8
 --enable-parser=vp9
 --enable-parser=av1
 --enable-parser=h264
 --enable-parser=hevc
+--enable-decoder=flac
 --enable-decoder=vp8
 --enable-decoder=vp9
 --enable-decoder=av1
@@ -20,9 +29,24 @@
 --enable-decoder=hevc
 --enable-bsf=hevc_metadata
 --enable-bsf=extract_extradata
+--enable-decoder=pcm_s16be
+--enable-decoder=pcm_s24le
+--enable-decoder=pcm_s24be
+--enable-decoder=pcm_s32be
+--enable-decoder=pcm_f32be
+--enable-decoder=pcm_s32le
+--enable-decoder=pcm_u8
 --enable-libopenh264
 --enable-decoder=libopenh264
 --enable-encoder=libopenh264
+--enable-decoder=libmp3lame
+--enable-libmp3lame
+--enable-encoder=libmp3lame
+--enable-decoder=aac
+--enable-encoder=aac
+--enable-decoder=pcm_f32le
+--enable-encoder=pcm_f32le
+--enable-decoder=mp3
 --enable-bsf=extract_extradata
 --enable-bsf=vp9_metadata
 --enable-bsf=av1_metadata
@@ -38,20 +62,5 @@
 --enable-filter=volume --enable-filter=anull
 --enable-swscale --enable-filter=scale
 --enable-protocol=jsfetch
---enable-demuxer=mp3
---enable-muxer=mp3
---enable-libmp3lame
---enable-encoder=libmp3lame
---enable-decoder=pcm_s16le --enable-decoder=pcm_s24le
---enable-demuxer=wav
---enable-encoder=pcm_s16le --enable-encoder=pcm_s24le
---enable-muxer=wav
---enable-decoder=pcm_f32le
---enable-encoder=pcm_f32le
---enable-ffmpeg --enable-ffprobe
---enable-decoder=aac
---enable-encoder=aac
---enable-decoder=pcm_s32le
---enable-decoder=pcm_u8
---enable-decoder=mp3
 --enable-muxer=hls
+--enable-protocol=data --enable-protocol=file
