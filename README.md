@@ -50,7 +50,7 @@ example of using libav.js from a CDN in the browser thread:
 <!doctype html>
 <html>
     <body>
-        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@libav.js/variant-default@6.4.7/dist/libav-6.4.7.1-default.js"></script>
+        <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@libav.js/variant-default@6.8.8/dist/libav-6.8.8.0-default.js"></script>
         <script type="text/javascript">(async function() {
             const libav = await LibAV.LibAV({noworker: true});
             await libav.writeFile("tmp.opus", new Uint8Array(
@@ -73,7 +73,7 @@ Here's a better example, using libav.js locally:
 <!doctype html>
 <html>
     <body>
-        <script type="text/javascript" src="libav-6.4.7.1-default.js"></script>
+        <script type="text/javascript" src="libav-6.8.8.0-default.js"></script>
         <script type="text/javascript">(async function() {
             const libav = await LibAV.LibAV();
             await libav.writeFile("tmp.opus", new Uint8Array(
@@ -161,7 +161,10 @@ released version, it is sufficient to provide the `sources` directory.
 
 libav.js is published to NPM as `libav.js`, and each released variant is
 published in a much smaller NPM package as `@libav.js/variant-<variant>`. The
-CDN example above uses the `@libav.js/variant-default` package, for example.
+CDN example above uses the `@libav.js/variant-default` package, for example. The
+`@libav.js/types` package is also provided with only the types (`.d.ts` file),
+and if using TypeScript, you are highly recommended to use it, to avoid bringing
+entire variants in as dependencies of your own packages.
 
 ### Why the version number in the filenames?
 
@@ -307,6 +310,30 @@ default version unless you have some specific compatibility issue that forces
 you to use a different version.
 
 
+## Modular variants
+
+In addition to the variants described above, a large number of modular variants
+are provided, each of which is sufficient for demuxing exactly one format, or
+decoding exactly one codec. The purpose of these modular variants is to make it
+easy to support every conceivable input file without making a massive
+monolithic build of libav.js.
+
+The modular variants are not available in NPM. Instead, most are provided in
+releases on GitHub with the suffix `-modular`. This release does not include
+popular reprobate codecs; you will need to build them yourself if you need
+them.
+
+Demuxer variants are named `demuxer-<format>`, e.g. `demuxer-matroska` and
+`demuxer-mp4`. Decoder variants are named `decoder-<codec>`, e.g.
+`decoder-opus` and `decoder-aac`. Each provides *only* functions related to
+demuxing or decoding, respectively.
+
+The modular variants are best paired with
+[AVGuesser](https://github.com/Yahweasel/AVGuesser) and
+[TransAVormer](https://github.com/Yahweasel/transavormer), as loading multiple
+variants on demand is complicated.
+
+
 ## Size
 
 FFmpeg is big, so libav.js is big. But, it's not ludicrous; the WebAssembly is
@@ -314,12 +341,17 @@ usually between 1.5 and 3 MiB for fairly complete builds, and the asm.js is abou
 double that.
 
 You can estimate the size of variants based on the size of the constituent
-fragments. As of version 5.0.6.1.1, an empty build is approximately 589KiB
+fragments. As of version 6.8.8.0, an empty build is approximately 178KiB
 (WebAssembly). The sizes of each additional fragment can be found in
 [fragment-sizes.csv](docs/fragment-sizes.csv). The data in that CSV file can be
 recreated by `tools/fragment-sizes.sh`, but note that the CSV file in the
 repository is after further processing (in particular, normalizing to KiB and
-subtracting away the empty size).
+subtracting away the empty and sizes). Note that the library columns show
+dependencies: for example, the `decoder-libopus` fragment depends on the
+`avcodec` fragment (since it's a codec), and the `1` in the `avcodec` column
+tells you that that dependency exists; a build with just `decoder-libopus` will
+take approximately the empty size, plus the fragment size of `avcodec`, plus the
+fragment size of `decoder-libopus`.
 
 The asm.js versions are much bigger, but will not be loaded on
 WebAssembly-capable clients.
@@ -371,6 +403,13 @@ connect it to WebCodecs:
    formats. This makes it easy to use libav.js for demuxing and WebCodecs for
    decoding, or WebCodecs for encoding and libav.js for muxing. Of course, the
    WebCodecs used with the bridge can easily be the polyfill if needed.
+
+In addition, a frontend library was created to bring together all of these
+projects and provide a single frontend for media transformation on a browser:
+
+ * [TransAVormer](https://github.com/Yahweasel/transavormer) is a stream-based
+   frontend for libav.js and WebCodecs for anything-to-anything transformation
+   of digital media data.
 
 
 ## Bundlers

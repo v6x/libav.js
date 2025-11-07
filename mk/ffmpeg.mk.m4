@@ -14,7 +14,7 @@ FFMPEG_CONFIG=--prefix=/opt/ffmpeg \
 	--disable-programs \
 	--disable-ffplay --disable-ffprobe --disable-network --disable-iconv --disable-xlib \
 	--disable-sdl2 --disable-zlib \
-	--disable-everything
+	--disable-everything --disable-swscale --disable-swresample
 
 
 build/ffmpeg-$(FFMPEG_VERSION)/build-%/libavformat/libavformat.a: \
@@ -47,7 +47,7 @@ part-install-$1-%: build/ffmpeg-$(FFMPEG_VERSION)/build-$1-%/libavformat/libavfo
 ]]])
 
 # Base (asm.js and wasm)
-buildrule(base, build/inst/base/include/pthread.h, [[[--disable-pthreads --arch=emscripten]]], [[[-lemfiberthreads]]])
+buildrule(base, build/inst/base/include/pthread.h, [[[--enable-pthreads --arch=emscripten]]], [[[-lemfiberthreads]]])
 # wasm + threads
 buildrule(thr, build/inst/thr/lib/libemfiberthreads.a, [[[--enable-pthreads --arch=emscripten]]], [[[-lemfiberthreads $(THRFLAGS)]]])
 
@@ -78,7 +78,7 @@ build/ffmpeg-$(FFMPEG_VERSION).tar.xz:
 	curl https://ffmpeg.org/releases/ffmpeg-$(FFMPEG_VERSION).tar.xz -o $@
 
 ffmpeg-release:
-	cp build/ffmpeg-$(FFMPEG_VERSION).tar.xz dist/release/libav.js-$(LIBAVJS_VERSION)/sources/
+	cp build/ffmpeg-$(FFMPEG_VERSION).tar.xz $(RELEASE_DIR)/libav.js-$(LIBAVJS_VERSION)$(RELEASE_SUFFIX)/sources/
 
 .PRECIOUS: \
 	build/ffmpeg-$(FFMPEG_VERSION)/build-base-%/libavformat/libavformat.a \

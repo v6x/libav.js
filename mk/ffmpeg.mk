@@ -14,7 +14,7 @@ FFMPEG_CONFIG=--prefix=/opt/ffmpeg \
 	--disable-programs \
 	--disable-ffplay --disable-ffprobe --disable-network --disable-iconv --disable-xlib \
 	--disable-sdl2 --disable-zlib \
-	--disable-everything
+	--disable-everything --disable-swscale --disable-swresample
 
 
 build/ffmpeg-$(FFMPEG_VERSION)/build-%/libavformat/libavformat.a: \
@@ -35,7 +35,7 @@ build/ffmpeg-$(FFMPEG_VERSION)/build-base-%/ffbuild/config.mak: build/inst/base/
 	cd build/ffmpeg-$(FFMPEG_VERSION)/build-base-$(*) && \
 	emconfigure env PKG_CONFIG_PATH="$(PWD)/build/inst/base/lib/pkgconfig" \
 		../configure $(FFMPEG_CONFIG) \
-                --disable-pthreads --arch=emscripten \
+                --enable-pthreads --arch=emscripten \
 		--optflags="$(OPTFLAGS)" \
 		--extra-cflags="-I$(PWD)/build/inst/base/include -lemfiberthreads" \
 		--extra-ldflags="-L$(PWD)/build/inst/base/lib -lemfiberthreads -s INITIAL_MEMORY=25165824" \
@@ -99,7 +99,7 @@ build/ffmpeg-$(FFMPEG_VERSION).tar.xz:
 	curl https://ffmpeg.org/releases/ffmpeg-$(FFMPEG_VERSION).tar.xz -o $@
 
 ffmpeg-release:
-	cp build/ffmpeg-$(FFMPEG_VERSION).tar.xz dist/release/libav.js-$(LIBAVJS_VERSION)/sources/
+	cp build/ffmpeg-$(FFMPEG_VERSION).tar.xz $(RELEASE_DIR)/libav.js-$(LIBAVJS_VERSION)$(RELEASE_SUFFIX)/sources/
 
 .PRECIOUS: \
 	build/ffmpeg-$(FFMPEG_VERSION)/build-base-%/libavformat/libavformat.a \
