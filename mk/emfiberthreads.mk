@@ -1,4 +1,4 @@
-EMFT_VERSION=1.1
+EMFT_VERSION=1.3
 
 build/inst/%/include/pthread.h: build/inst/%/lib/libemfiberthreads.a
 	cd build/emfiberthreads/emfiberthreads-$(EMFT_VERSION) && \
@@ -26,7 +26,7 @@ build/emfiberthreads-$(EMFT_VERSION).tar.gz:
 	curl https://github.com/Yahweasel/emfiberthreads/archive/refs/tags/v$(EMFT_VERSION).tar.gz -L -o $@
 
 emfiberthreads-release:
-	cp build/emfiberthreads-$(EMFT_VERSION).tar.gz dist/release/libav.js-$(LIBAVJS_VERSION)/sources/
+	cp build/emfiberthreads-$(EMFT_VERSION).tar.gz $(RELEASE_DIR)/libav.js-$(LIBAVJS_VERSION)$(RELEASE_SUFFIX)/sources/
 
 .PRECIOUS: \
 	build/inst/%/include/pthread.h \

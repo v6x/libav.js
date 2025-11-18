@@ -1,7 +1,7 @@
 {
   "name": "@voyagerx/libav.js",
   "//version": "The major and minor are our own versioning, while the revision is FFmpeg's major. When updating the version, make sure you update it here, in the Makefile.m4 and Makefile, and in the README.",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "description": "A compilation of the libraries associated with handling audio and video in ffmpeg—libavformat, libavcodec, libavfilter, libavutil and libswresample—for WebAssembly and asm.js, and thus the web.",
   "main": "dist/libav-default.js",
   "types": "dist/libav.types.d.ts",
@@ -24,9 +24,9 @@
   "scripts": {
     "prebuild": "rimraf dist && bash prepare-emcc.sh",
     "generate-makefile": "m4 Makefile.m4 > Makefile",
-    "build": "npm run generate-makefile && bash -c 'source ./.emsdk/emsdk_env.sh && make build-vrew -j9'",
+    "build": "npm run generate-config && npm run generate-makefile && bash -c 'source ./.emsdk/emsdk_env.sh && make build-vrew -j9'",
     "release": "rm -rf dist && npm run generate-makefile && bash -c 'source ./.emsdk/emsdk_env.sh && make release -j9'",
-    "generate-config": "cd configs && CONFIG_CONTENT=$(cat ./configs/vrew/config.json) && ./mkconfig.js vrew \"$CONFIG_CONTENT\" && cd ..",
+    "generate-config": "cd configs && CONFIG_CONTENT=$(cat ./vrew/config.json) && ./mkconfig.js vrew \"$CONFIG_CONTENT\" && cd ..",
     "test": "npm run build && cd tests && node node-test.js --include-slow && node node-test.mjs"
   },
   "repository": {

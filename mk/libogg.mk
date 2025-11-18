@@ -1,4 +1,4 @@
-LIBOGG_VERSION=1.3.5
+LIBOGG_VERSION=1.3.6
 
 build/inst/%/lib/pkgconfig/ogg.pc: build/libogg-$(LIBOGG_VERSION)/build-%/config.h
 	cd build/libogg-$(LIBOGG_VERSION)/build-$* && \
@@ -24,7 +24,7 @@ build/libogg-$(LIBOGG_VERSION).tar.xz:
 	curl https://downloads.xiph.org/releases/ogg/libogg-$(LIBOGG_VERSION).tar.xz -L -o $@
 
 libogg-release:
-	cp build/libogg-$(LIBOGG_VERSION).tar.xz dist/release/libav.js-$(LIBAVJS_VERSION)/sources/
+	cp build/libogg-$(LIBOGG_VERSION).tar.xz $(RELEASE_DIR)/libav.js-$(LIBAVJS_VERSION)$(RELEASE_SUFFIX)/sources/
 
 .PRECIOUS: \
 	build/inst/%/lib/pkgconfig/ogg.pc \

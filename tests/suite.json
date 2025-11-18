@@ -6,6 +6,7 @@
  "100-ffmpeg-cli.js",
  "101-ffprobe-cli-expected.js",
  "102-ffprobe-cli.js",
+ "500-bsf.js",
  "500-decode-audio.js",
  "500-decode-video.js",
  "500-demux-decode.js",
@@ -45,5 +46,7 @@
  "624-decode-and-filter-combined.js",
  "625-filtering-video.js",
  "626-time-base.js",
+ "627-bsf.js",
+ "628-jsfetch-seek.js",
  "650-all-to-all.js"
 ]

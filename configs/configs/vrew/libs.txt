@@ -1,2 +1,9 @@
+build/ffmpeg-@FFVER/build-@TARGET-@VARIANT/libavutil/libavutil.a
 build/inst/@TARGET/lib/libopenh264.a
 build/inst/@TARGET/lib/libmp3lame.a
+build/ffmpeg-@FFVER/build-@TARGET-@VARIANT/libswscale/libswscale.a
+build/ffmpeg-@FFVER/build-@TARGET-@VARIANT/libavformat/libavformat.a
+build/ffmpeg-@FFVER/build-@TARGET-@VARIANT/libavcodec/libavcodec.a
+build/ffmpeg-@FFVER/build-@TARGET-@VARIANT/libavcodec/libavcodec.a
+build/ffmpeg-@FFVER/build-@TARGET-@VARIANT/libavcodec/libavcodec.a
+build/ffmpeg-@FFVER/build-@TARGET-@VARIANT/libavfilter/libavfilter.a
