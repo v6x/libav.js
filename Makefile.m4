@@ -28,7 +28,7 @@ EFLAGS=\
 	-s "ASYNCIFY_IMPORTS=['libavjs_wait_reader', 'jsfetch_open_js', 'jsfetch_read_js', 'jsfetch_seek_js']" \
 	-s INITIAL_MEMORY=25165824 \
 	-s ALLOW_MEMORY_GROWTH=1 \
-	-s WASM_BIGINT=1
+	-s WASM_BIGINT=0
 
 EFLAGS_NTHR=\
 	-s "EXPORTED_RUNTIME_METHODS=['ccall', 'cwrap', 'HEAPU8', 'HEAP8', 'HEAPU16', 'HEAP16', 'HEAPU32', 'HEAP32', 'HEAPF32', 'addFunction', 'removeFunction']"

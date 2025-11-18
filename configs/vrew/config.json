@@ -36,6 +36,8 @@
     "audio-filters",
     "swscale",
     "protocol-jsfetch",
+    "protocol-file",
+    "protocol-data",
     "workerfs",
     "muxer-hls",
     "avformat",
