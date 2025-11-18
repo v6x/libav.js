@@ -62,4 +62,6 @@
 --enable-filter=volume --enable-filter=anull
 --enable-swscale --enable-filter=scale
 --enable-protocol=jsfetch
+--enable-protocol=file
+--enable-protocol=data
 --enable-muxer=hls
