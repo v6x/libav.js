@@ -183,7 +183,12 @@
                 "nb_coded_side_data",
                 "profile",
                 "sample_rate",
-                "width"
+                "width",
+                "block_align",
+                "frame_size",
+                "initial_padding",
+                "trailing_padding",
+                "seek_preroll"
             ]],
             ["AVPacket", [
                 "data",
