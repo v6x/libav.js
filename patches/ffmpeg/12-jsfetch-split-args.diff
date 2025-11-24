@@ -1,0 +1,114 @@
+Index: ffmpeg-8.0/libavformat/jsfetch.c
+===================================================================
+--- ffmpeg-8.0.orig/libavformat/jsfetch.c
++++ ffmpeg-8.0/libavformat/jsfetch.c
+@@ -51,16 +51,17 @@ static const AVClass jsfetch_context_class = {
+ /**
+  * Open a fetch connection (JavaScript side).
+  */
+-EM_JS(int, jsfetch_open_js, (const char *url, uint64_t start_offset), {
++EM_JS(int, jsfetch_open_js, (const char *url, uint32_t start_lo, uint32_t start_hi), {
+     return Asyncify.handleAsync(function() {
+             url = UTF8ToString(url);
+             var fetchUrl = url.slice(0, 8) === "jsfetch:" ? url.slice(8) : url;
++            var start_offset = (BigInt(start_lo >>> 0) | (BigInt(start_hi >>> 0) << 32n));
+         return Promise.all([]).then(function() {
+             var fetchOptions = {};
+             
+             if (start_offset > 0) {
+                 fetchOptions.headers = {
+-                    'Range': 'bytes=' + start_offset + '-'
++                    'Range': 'bytes=' + start_offset.toString() + '-'
+                 };
+             }
+             
+@@ -98,7 +99,7 @@ EM_JS(int, jsfetch_open_js, (const char *url, uint64_t start_offset), {
+                 if (match) {
+                     jsfo.filesize = parseInt(match[1]);
+                 }
+-            } else if (contentLength && start_offset === 0) {
++            } else if (contentLength && start_offset === 0n) {
+                 jsfo.filesize = parseInt(contentLength);
+             }
+             return idx;
+@@ -113,9 +114,13 @@ EM_JS(int, jsfetch_open_js, (const char *url, uint64_t start_offset), {
+ /**
+  * Get file size from JavaScript side.
+  */
+-EM_JS(uint64_t, jsfetch_get_filesize_js, (int idx), {
++EM_JS(void, jsfetch_get_filesize_js, (int idx, uint32_t *lo, uint32_t *hi), {
+     var jsfo = Module.libavjsJSFetch.fetches[idx];
+-    return jsfo ? jsfo.filesize : 0;
++    var size = jsfo ? jsfo.filesize : 0;
++    var lo32 = size >>> 0;
++    var hi32 = (size / 0x100000000) >>> 0;
++    Module.HEAPU32[lo >> 2] = lo32;
++    Module.HEAPU32[hi >> 2] = hi32;
+ });
+ 
+ /**
+@@ -126,11 +131,13 @@ static int jsfetch_open(URLContext *h, const char *url, int flags, AVDictionary
+     JSFetchContext *ctx = h->priv_data;
+     ctx->off = 0;
+     ctx->seekable = -1; // probe seekability
+-    ctx->idx = jsfetch_open_js(url, 0);
++    ctx->idx = jsfetch_open_js(url, 0, 0);
+     
+     if (ctx->idx > 0) {
+-        ctx->filesize = jsfetch_get_filesize_js(ctx->idx);
+         // If we got a filesize, assume seekable. Otherwise keep as streaming.
++        uint32_t lo=0, hi=0;
++        jsfetch_get_filesize_js(ctx->idx, &lo, &hi);
++        ctx->filesize = (uint64_t)lo | ((uint64_t)hi << 32);
+         if (ctx->filesize > 0) {
+             h->is_streamed = 0;
+             ctx->seekable = 1;
+@@ -192,17 +199,20 @@ EM_JS(int, jsfetch_read_js, (int idx, unsigned char *toBuf, int size), {
+ static int jsfetch_read(URLContext *h, unsigned char *buf, int size)
+ {
+     JSFetchContext *ctx = h->priv_data;
+-    return jsfetch_read_js(ctx->idx, buf, size);
++    int ret = jsfetch_read_js(ctx->idx, buf, size);
++    if (ret > 0) ctx->off += ret;
++    return ret;
+ }
+ 
+-EM_JS(int, jsfetch_seek_js, (int old_idx, const char *url, uint64_t start_offset), {
++EM_JS(int, jsfetch_seek_js, (int old_idx, const char *url, uint32_t start_lo, uint32_t start_hi), {
+     return Asyncify.handleAsync(function () {
+         url = UTF8ToString(url);
+         var fetchUrl = url.slice(0, 8) === "jsfetch:" ? url.slice(8) : url;
++        var start_offset = (BigInt(start_lo >>> 0) | (BigInt(start_hi >>> 0) << 32n));
+         return Promise.all([])
+           .then(function () {
+             var fetchOptions = {
+-              headers: { Range: "bytes=" + start_offset + "-" },
++              headers: { Range: "bytes=" + start_offset.toString() + "-" },
+             };
+             var abortController = new AbortController();
+             fetchOptions.signal = abortController.signal;
+@@ -295,17 +305,19 @@ static int64_t jsfetch_seek(URLContext *h, int64_t off, int whence)
+         return AVERROR(EINVAL);
+     if (off < 0)
+         return AVERROR(EINVAL);
+-    ctx->off = off;
+ 
+     if (ctx->off && h->is_streamed)
+         return AVERROR(ENOSYS);
+ 
+-    int new_idx = jsfetch_seek_js(ctx->idx, h->filename, off);
++    uint32_t lo=0, hi=0;
++    lo = (uint32_t)(off & 0xFFFFFFFF);
++    hi = (uint32_t)(off >> 32);
++    int new_idx = jsfetch_seek_js(ctx->idx, h->filename, lo, hi);
+     if (new_idx < 0) {
+-       ctx->off = old_off;
+-       return old_off;
++      return ctx->off;
+     }
+-    
++
++    ctx->off = off;
+     ctx->idx = new_idx;
+ 
+     return off;
