@@ -178,7 +178,7 @@ var writerCallbacks = {
     write: function(stream, buffer, offset, length, position) {
         if (!Module.onwrite)
             throw new FS.ErrnoError(ERRNO_CODES.EIO);
-        Module.onwrite(stream.node.name, position, buffer.subarray(offset, offset + length));
+        Module.onwrite(stream.node.name, stream.path, position, buffer.subarray(offset, offset + length));
         return length;
     },
 
@@ -508,7 +508,7 @@ var fsfhs = {};
 var preFSFHOnWrite = null;
 
 // Passthru for FSFH writing.
-function fsfhOnWrite(name, position, buffer) {
+function fsfhOnWrite(name, _, position, buffer) {
     if (!(name in fsfhs)) {
         if (preFSFHOnWrite)
             return preFSFHOnWrite(name, position, buffer);
@@ -587,6 +587,228 @@ Module.unlinkfsfhfile = function(name) {
     return h.promise.then(function() {
         return h.handle.close();
     });
+}
+
+var __fsdhMounts = Object.create(null);
+var __fsdhOpen = Object.create(null);
+
+/**
+ * 
+ * @param {*} mountPoint 
+ * @param {*} dirHandle 
+ */
+/// @types mkfsdhdir@sync(mountPoint: string, dirHandle: FileSystemDirectoryHandle): @promise@void@
+Module.mkfsdhdir = async function(name, dirHandle) {
+    const root = ("/" + name);
+    __fsdhMounts[name] = {
+      root,
+      dirHandle,
+    };
+  
+    await fsdhEnsureDir(dirHandle, "", true);
+
+    try { FS.unmount(root); } catch {}
+    try { FS.mkdir(root); } catch {}
+    try { FS.mount(streamWriterFS, {}, root); } catch {}
+  
+    if (Module.onwrite !== fsdhOnWrite) {
+      Module.onwrite = fsdhOnWrite;
+    }
+};
+  
+/**
+ * 
+ * @param {*} name 
+ * @param {*} opts { removeEntries?: boolean }
+ */
+/// @types unlinkfsdhdir(name: string, opts?: { removeEntries?: boolean }): Promise<void>
+Module.unlinkfsdhdir = async function(name, opts) {
+    opts = opts || {};
+    const m = __fsdhMounts[name];
+    if (!m) return;
+  
+    const paths = Object.keys(__fsdhOpen).filter(path => path.startsWith(m.root + "/"));
+    for (const path of paths) await fsdhClose(path, false);
+  
+    if (opts.removeEntries) {
+      const relativePath = "";
+      await fsdhRemoveTree(m.dirHandle, relativePath);
+    }
+  
+    FS.unmount(m.root);
+    FS.rmdir(m.root);
+    delete __fsdhMounts[name];
+  };
+
+/**
+ * 
+ * @param name  Filename to get blobs from.
+ * @returns Array of blobs.
+ */
+/// @types getfsdhblobs(name: string): Promise<Array<{ path: string, blob: Blob, size: number, lastModified: number }>>
+Module.getfsdhblobs = async function(name) {
+    const m = __fsdhMounts[name];
+    if (!m) throw new Error(`mount "${name}" not found`);
+  
+    const openPaths = Object.keys(__fsdhOpen).filter(path => path.startsWith(m.root + "/"));
+    for (const path of openPaths) {
+      await fsdhClose(path, false);
+    }
+  
+    const results = [];
+    async function walk(dirHandle, prefix) {
+      for await (const entry of dirHandle.values()) {
+        if (entry.kind === "file") {
+          const fh = await dirHandle.getFileHandle(entry.name, { create: false });
+          const file = await fh.getFile();
+          results.push({
+            path: prefix + entry.name,
+            blob: file,
+            size: file.size,
+            lastModified: file.lastModified ?? 0,
+          });
+        } else if (entry.kind === "directory") {
+          const sub = await dirHandle.getDirectoryHandle(entry.name, { create: false });
+          await walk(sub, prefix + entry.name + "/");
+        }
+      }
+    }
+  
+    await walk(m.dirHandle, "");
+  
+    return results;
+  };
+
+async function fsdhOnWrite(_, path, position, buf) {
+    return fsdhWrite(path, position, buf);
+  }
+  
+async function fsdhWrite(path, position, u8) {
+    let mount = null;
+    for (const k in __fsdhMounts) {
+        const m = __fsdhMounts[k];
+        if (path.startsWith(m.root + "/")) { mount = m; break; }
+    }
+    if (!mount) return; 
+
+    let fileState = __fsdhOpen[path];
+    if (!fileState) {
+        fileState = __fsdhOpen[path] = {
+          init: null,
+          ready: false,
+          syncHandle: null,
+          handle: null,
+          last: Promise.resolve(),
+          q: []
+        };
+        fileState.init = (async () => {
+          const fh = await fsdhGetFileHandle(mount.root, mount.dirHandle, path);
+          try {
+            fileState.syncHandle = await fh.createSyncAccessHandle();
+          } catch {
+            fileState.handle = await fh.createWritable();
+            fileState.last = Promise.resolve();
+          }
+          fileState.ready = true;
+        })().catch(e => {
+          console.error("open failed", path, e);
+        }).then(() => flushQueue(path));
+    }
+    
+    fileState.q.push({ pos: position, u8: u8.slice(0) });
+    if (fileState.ready) flushQueue(path);
+}
+
+function flushQueue(path) {
+    const fileState = __fsdhOpen[path];
+    if (!fileState || !fileState.ready || fileState.flushing) return;
+    fileState.flushing = true;
+
+    if (fileState.syncHandle) {
+      for (let i = 0; i < fileState.q.length; i++) {
+        const { pos, u8 } = fileState.q[i];
+        fileState.syncHandle.write(u8, { at: pos });
+      }
+      fileState.q.length = 0;
+      fileState.flushing = false;
+      return;
+    }
+  
+    while (fileState.q.length) {
+      const { pos, u8 } = fileState.q.shift();
+      fileState.last = fileState.last.then(() =>
+        fileState.handle.write({ type: "write", position: pos, data: u8 })
+      );
+    }
+}
+
+async function fsdhClose(path, removeEntry) {
+    let mount = null;
+    for (const k in __fsdhMounts) {
+      const m = __fsdhMounts[k];
+      if (path.startsWith(m.root + "/")) { 
+        mount = m; 
+        break; 
+      }
+    }
+    const fileState = __fsdhOpen[path];
+    if (fileState) {
+        await fileState.init;
+        flushQueue(path);
+        if (fileState.handle) { await fileState.last; await fileState.handle.close(); }
+        if (fileState.syncHandle) { fileState.syncHandle.close(); }
+      delete __fsdhOpen[path];
+    }
+  
+    if (removeEntry && mount) {
+      const relativePath = path.slice((mount.root + "/").length);
+      await fsdhRemoveFileByPath(mount.dirHandle, relativePath); 
+    }
+}
+  
+async function fsdhEnsureDir(rootDirHandle, relativePath, create) {
+    let currentDir = rootDirHandle;
+    if (!relativePath) return currentDir;
+    const parts = relativePath.split("/").filter(Boolean);
+    for (const part of parts) {
+        currentDir = await currentDir.getDirectoryHandle(part, { create: !!create });
+    }
+    return currentDir;
+}
+
+async function fsdhGetFileHandle(root, dirHandle, path) {
+    const relativePath = path.slice((root + "/").length);
+    const parts = relativePath.split("/").filter(Boolean);
+    const fileName = parts.pop();
+    let currentDir = dirHandle;
+
+    for (const part of parts) currentDir = await currentDir.getDirectoryHandle(part, { create: true });
+    return await currentDir.getFileHandle(fileName, { create: true });
+}
+  
+async function fsdhRemoveFileByPath(dirHandle, relativePath) {
+    const parts = relativePath.split("/").filter(Boolean);
+    const fileName = parts.pop();
+    let currentDir = dirHandle;
+    for (const part of parts) currentDir = await currentDir.getDirectoryHandle(part, { create: false });
+    await currentDir.removeEntry(fileName, { recursive: false });
+}
+  
+async function fsdhRemoveTree(dirHandle, relativePath) {
+    const targetDir = await fsdhEnsureDir(dirHandle, relativePath, false);
+    for await (const entry of targetDir.values()) {
+      try {
+        await targetDir.removeEntry(entry.name, { recursive: true });
+      } catch (e) {
+        if (entry.kind === 'directory') {
+          const subDir = await targetDir.getDirectoryHandle(entry.name, { create: false });
+          await fsdhRemoveTree(subDir, "");
+          await targetDir.removeEntry(entry.name, { recursive: false });
+        } else {
+          await targetDir.removeEntry(entry.name, { recursive: false });
+        }
+      }
+    }
 }
 
 /**

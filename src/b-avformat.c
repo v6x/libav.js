@@ -457,6 +457,27 @@ int convert_to_hls(const char* in_url, const char* playlist_path) {
     av_dict_set(&mux_opts, "hls_playlist_type", "vod", 0);
     av_dict_set(&mux_opts, "hls_fmp4_init_filename", "init.mp4", 0);
 
+    const char *last_slash = strrchr(playlist_path, '/');
+    char *seg_tmpl = NULL;
+    if (last_slash) {
+        size_t dir_len = (size_t)(last_slash - playlist_path);
+        const char *seg_name = "seg_%05d.m4s";
+
+        seg_tmpl = (char *) malloc(dir_len + 1 + strlen(seg_name) + 1);
+        if (!seg_tmpl) { ret = AVERROR(ENOMEM); goto end; }
+
+        memcpy(seg_tmpl, playlist_path, dir_len);
+        seg_tmpl[dir_len] = '/';
+        strcpy(seg_tmpl + dir_len + 1, seg_name);
+
+    } else {
+        seg_tmpl = strdup("seg_%05d.m4s");
+        if (!seg_tmpl) { ret = AVERROR(ENOMEM); goto end; }
+    }
+
+    av_dict_set(&mux_opts, "hls_segment_filename", seg_tmpl, 0);
+    free(seg_tmpl);
+
     int v_idx = av_find_best_stream(in_fmt, AVMEDIA_TYPE_VIDEO, -1, -1, NULL, 0);
     if (v_idx < 0) { 
         ret = AVERROR_STREAM_NOT_FOUND; 
