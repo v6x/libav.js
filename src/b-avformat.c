@@ -303,12 +303,13 @@ int ff_extract_audio(const char *in_filename, const char *out_filename, void (*p
 
     while (av_read_frame(in_fmt, &pkt) >= 0) {
         if (pkt.stream_index == audio_stream_index) {
-            pkt.stream_index = out_stream->index;
-            av_interleaved_write_frame(out_fmt, &pkt);
-            
             if (pkt.pts != AV_NOPTS_VALUE) {
                 processed_pts = pkt.pts;
             }
+
+            av_packet_rescale_ts(&pkt, in_stream->time_base, out_stream->time_base);
+            pkt.stream_index = out_stream->index;
+            av_interleaved_write_frame(out_fmt, &pkt);
             
             packet_count++;
             
@@ -409,6 +410,11 @@ int ff_slice_audio(const char *in_filename, const char *out_filename, double sta
                 break;
             }
             if (pts_time >= 0) {
+                pkt.pts = pts_time;
+                pkt.dts = pts_time;
+
+                av_packet_rescale_ts(&pkt, in_stream->time_base, out_stream->time_base);
+
                 pkt.stream_index = out_stream->index;
                 av_interleaved_write_frame(out_fmt, &pkt);
             }
