@@ -211,6 +211,7 @@ Note that there's no equivalent of `ff_free_muxer`, because
 ff_read_frame_multi(
     fmt_ctx: number, pkt: number, opts?: {
         limit?: number, // OUTPUT limit, in bytes
+        maxPackets?: number, // OUTPUT limit, in number of packets (default: 1000)
         unify?: boolean, // If true, unify the packets into a single stream (called 0), so that the output is in the same order as the input
         copyoutPacket?: string // Version of ff_copyout_packet to use
     }
@@ -220,13 +221,17 @@ ff_read_frame_multi(
 Read some packets from a format context. Like `ff_write_multi`, you must provide
 `pkt`.
 
-By default, this will read as much as it can, which is typically the entire
-file. If using a device in this default mode, you will need to feed it data, and
-won't get anything back until it's done.
+By default, this will read up to 1000 packets. To read more, set `maxPackets` to
+a higher value or `Infinity` to disable the limit. If using a device, you
+will need to feed it data.
 
-To limit how much data is sent, use the `limit` option. `limit` limits how much
-data `ff_read_frame_multi` outputs to one packet more than the number of bytes
-you request.
+To limit how much data is sent by bytes, use the `limit` option. `limit` limits
+how much data `ff_read_frame_multi` outputs to one packet more than the number
+of bytes you request.
+
+To limit how much data is sent by packet count, use the `maxPackets` option.
+This is useful for preventing memory issues when processing files with many
+small packets. The default is 1000 packets.
 
 For reading from a reader device, see also `ff_reader_dev_waiting` and
 `ff_reader_dev_send`.

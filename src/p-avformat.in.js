@@ -1152,6 +1152,7 @@ var ff_write_multi = Module.ff_write_multi = function(oc, pkt, inPackets, interl
  *     fmt_ctx: number, pkt: number, opts?: {
  *         index?: number, // INPUT stream index
  *         limit?: number, // OUTPUT limit, in bytes
+ *         maxPackets?: number, // OUTPUT limit, in number of packets (default: 1000). Set to Infinity to disable.
  *         unify?: boolean, // If true, unify the packets into a single stream (called 0), so that the output is in the same order as the input
  *         copyoutPacket?: "default" // Version of ff_copyout_packet to use
  *     }
@@ -1160,6 +1161,7 @@ var ff_write_multi = Module.ff_write_multi = function(oc, pkt, inPackets, interl
  *     fmt_ctx: number, pkt: number, opts: {
  *         index?: number, // INPUT stream index
  *         limit?: number, // OUTPUT limit, in bytes
+ *         maxPackets?: number, // OUTPUT limit, in number of packets (default: 1000). Set to 0 or Infinity to disable.
  *         unify?: boolean, // If true, unify the packets into a single stream (called 0), so that the output is in the same order as the input
  *         copyoutPacket: "ptr" // Version of ff_copyout_packet to use
  *     }
@@ -1167,6 +1169,7 @@ var ff_write_multi = Module.ff_write_multi = function(oc, pkt, inPackets, interl
  */
 function ff_read_frame_multi(fmt_ctx, pkt, opts) {
     var sz = 0;
+    var packetCount = 0;
     var outPackets = {};
     var tbs = {};
 
@@ -1175,6 +1178,7 @@ function ff_read_frame_multi(fmt_ctx, pkt, opts) {
     if (typeof opts === "undefined")
         opts = {};
     var unify = !!opts.unify;
+    var maxPackets = opts.maxPackets !== undefined ? opts.maxPackets : 1000;
     var copyoutPacket = ff_copyout_packet;
     if (opts.copyoutPacket)
         copyoutPacket = ff_copyout_packet_versions[opts.copyoutPacket];
@@ -1226,8 +1230,11 @@ function ff_read_frame_multi(fmt_ctx, pkt, opts) {
                 outPackets[idx] = [];
             outPackets[idx].push(packet);
             sz += AVPacket_size(pkt);
+            packetCount++;
             av_packet_unref(pkt);
-            if (opts.limit && sz >= opts.limit)
+
+            // Check byte limit and packet count limit (always return at least 1 packet)
+            if (opts.limit && sz >= opts.limit || packetCount >= maxPackets)
                 return [-6 /* EAGAIN */, outPackets];
 
             return Promise.all([]).then(step);
