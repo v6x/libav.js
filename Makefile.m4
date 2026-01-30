@@ -228,7 +228,7 @@ release: extract
 	done
 	cp dist/libav.types.d.ts $(RELEASE_DIR)/libav.js-$(LIBAVJS_VERSION)$(RELEASE_SUFFIX)/dist/
 	mkdir $(RELEASE_DIR)/libav.js-$(LIBAVJS_VERSION)$(RELEASE_SUFFIX)/sources
-	for t in ffmpeg emfiberthreads lame libaom libogg libvorbis libvpx opus zlib; \
+	for t in ffmpeg emfiberthreads dav1d lame libaom libogg libvorbis libvpx opus zlib; \
 	do \
 		$(MAKE) $$t-release; \
 	done
@@ -282,6 +282,7 @@ clean: halfclean
 	-rm -rf build/inst
 	-rm -rf build/emfiberthreads
 	-rm -rf build/opus-$(OPUS_VERSION)
+	-rm -rf build/dav1d-$(DAV1D_VERSION)
 	-rm -rf build/libaom-$(LIBAOM_VERSION)
 	-rm -rf build/libvorbis-$(LIBVORBIS_VERSION)
 	-rm -rf build/libogg-$(LIBOGG_VERSION)

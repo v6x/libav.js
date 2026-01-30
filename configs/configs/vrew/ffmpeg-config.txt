@@ -5,7 +5,8 @@
 --enable-muxer=mov
 --enable-muxer=mp4
 --enable-demuxer=matroska
---enable-muxer=matroska --enable-muxer=webm
+--enable-muxer=matroska
+--enable-muxer=webm
 --enable-demuxer=mp3
 --enable-muxer=mp3
 --enable-decoder=pcm_s16le --enable-decoder=pcm_s24le
@@ -22,7 +23,10 @@
 --enable-decoder=flac
 --enable-decoder=vp8
 --enable-decoder=vp9
---enable-decoder=av1
+--enable-bsf=av1_metadata
+--enable-bsf=extract_extradata
+--enable-libdav1d
+--enable-decoder=libdav1d
 --enable-decoder=h264
 --enable-bsf=h264_metadata
 --enable-bsf=extract_extradata
