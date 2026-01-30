@@ -12,7 +12,6 @@
   "decoder-flac",
   "decoder-vp8",
   "decoder-vp9",
-  "decoder-libaom_av1",
   "decoder-libdav1d",
   "decoder-h264",
   "decoder-hevc",
