@@ -7,7 +7,7 @@ FFMPEG_VERSION_MAJOR=8
 FFMPEG_VERSION_MINREV=0
 FFMPEG_VERSION=$(FFMPEG_VERSION_MAJOR).$(FFMPEG_VERSION_MINREV)
 LIBAVJS_VERSION_SUFFIX=
-LIBAVJS_VERSION_BASE=0.16
+LIBAVJS_VERSION_BASE=0.17
 LIBAVJS_VERSION=$(LIBAVJS_VERSION_BASE).$(FFMPEG_VERSION)$(LIBAVJS_VERSION_SUFFIX)
 LIBAVJS_VERSION_SHORT=$(LIBAVJS_VERSION_BASE).$(FFMPEG_VERSION_MAJOR)
 EMCC=emcc
@@ -228,7 +228,7 @@ release: extract
 	done
 	cp dist/libav.types.d.ts $(RELEASE_DIR)/libav.js-$(LIBAVJS_VERSION)$(RELEASE_SUFFIX)/dist/
 	mkdir $(RELEASE_DIR)/libav.js-$(LIBAVJS_VERSION)$(RELEASE_SUFFIX)/sources
-	for t in ffmpeg emfiberthreads lame libaom libogg libvorbis libvpx opus zlib; \
+	for t in ffmpeg emfiberthreads dav1d lame libaom libogg libvorbis libvpx opus zlib; \
 	do \
 		$(MAKE) $$t-release; \
 	done
@@ -282,6 +282,7 @@ clean: halfclean
 	-rm -rf build/inst
 	-rm -rf build/emfiberthreads
 	-rm -rf build/opus-$(OPUS_VERSION)
+	-rm -rf build/dav1d-$(DAV1D_VERSION)
 	-rm -rf build/libaom-$(LIBAOM_VERSION)
 	-rm -rf build/libvorbis-$(LIBVORBIS_VERSION)
 	-rm -rf build/libogg-$(LIBOGG_VERSION)
