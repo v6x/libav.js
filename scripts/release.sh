@@ -71,6 +71,8 @@ log "Releasing version ${VERSION} (tag ${TAG})"
 # ---------------------------------------------------------------------------
 # 3. Idempotent tag creation and push
 # ---------------------------------------------------------------------------
+HEAD_COMMIT="$(git rev-parse HEAD)"
+
 REMOTE_TAG="$(git ls-remote --tags origin "refs/tags/${TAG}" || true)"
 
 if [[ -n "$REMOTE_TAG" ]]; then
@@ -84,7 +86,6 @@ if [[ -n "$REMOTE_TAG" ]]; then
   else
     REMOTE_TAG_COMMIT="$(printf '%s\n' "$REMOTE_TAG_REFS" | awk 'NR==1{print $1}')"
   fi
-  HEAD_COMMIT="$(git rev-parse HEAD)"
 
   if [[ "$REMOTE_TAG_COMMIT" != "$HEAD_COMMIT" ]]; then
     die "Tag ${TAG} already exists on origin but points at commit ${REMOTE_TAG_COMMIT}, not HEAD (${HEAD_COMMIT}). If this is unintended, run: git push origin :refs/tags/${TAG} && git tag -d ${TAG}, then re-run this script."
@@ -113,8 +114,8 @@ while [[ "$elapsed" -lt "$CI_POLL_TIMEOUT" ]]; do
   RUN_ID="$(gh run list \
     -R "$OWNER_REPO" \
     --workflow "$WORKFLOW_FILE" \
-    --json databaseId,headBranch,status,conclusion,createdAt \
-    --jq "[.[] | select(.headBranch == \"${TAG}\")] | sort_by(.createdAt) | last | .databaseId // empty")"
+    --json databaseId,headBranch,headSha,status,conclusion,createdAt \
+    --jq "[.[] | select(.headSha == \"${HEAD_COMMIT}\")] | sort_by(.createdAt) | last | .databaseId // empty")"
 
   if [[ -n "$RUN_ID" ]]; then
     break
