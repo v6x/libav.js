@@ -13,7 +13,6 @@ tests/out.mp4
 
 node_modules/
 
-# 이 프로젝트는 yarn을 사용한다 (packageManager: yarn). npm 락파일은 추적하지 않는다.
 package-lock.json
 
 .DS_Store
