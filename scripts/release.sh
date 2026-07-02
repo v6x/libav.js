@@ -42,6 +42,26 @@ fi
 log "Preflight checks passed."
 
 # ---------------------------------------------------------------------------
+# 1b. Resolve owner/repo from the origin remote so `gh` calls don't depend
+#     on a configured default repository.
+# ---------------------------------------------------------------------------
+ORIGIN_URL="$(git remote get-url origin)"
+case "$ORIGIN_URL" in
+  git@github.com:*)
+    OWNER_REPO="${ORIGIN_URL#git@github.com:}"
+    OWNER_REPO="${OWNER_REPO%.git}"
+    ;;
+  https://github.com/*)
+    OWNER_REPO="${ORIGIN_URL#https://github.com/}"
+    OWNER_REPO="${OWNER_REPO%.git}"
+    ;;
+  *)
+    die "Could not parse owner/repo from origin remote URL: ${ORIGIN_URL}"
+    ;;
+esac
+log "Resolved origin repository: ${OWNER_REPO}"
+
+# ---------------------------------------------------------------------------
 # 2. Determine version and tag
 # ---------------------------------------------------------------------------
 VERSION="$(node -p "require('./package.json').version")"
@@ -54,7 +74,23 @@ log "Releasing version ${VERSION} (tag ${TAG})"
 REMOTE_TAG="$(git ls-remote --tags origin "refs/tags/${TAG}" || true)"
 
 if [[ -n "$REMOTE_TAG" ]]; then
-  log "Tag ${TAG} already exists on origin. Skipping tag creation/push."
+  # Find the commit the remote tag points at. For annotated tags, prefer
+  # the peeled "^{}" entry (which resolves to the commit); otherwise use
+  # the tag ref itself (lightweight tags already point at the commit).
+  REMOTE_TAG_REFS="$(git ls-remote --tags origin | grep -E "refs/tags/${TAG}(\^\{\})?\$" || true)"
+  DEREF_LINE="$(printf '%s\n' "$REMOTE_TAG_REFS" | grep '\^{}$' || true)"
+  if [[ -n "$DEREF_LINE" ]]; then
+    REMOTE_TAG_COMMIT="$(awk '{print $1}' <<<"$DEREF_LINE")"
+  else
+    REMOTE_TAG_COMMIT="$(printf '%s\n' "$REMOTE_TAG_REFS" | awk 'NR==1{print $1}')"
+  fi
+  HEAD_COMMIT="$(git rev-parse HEAD)"
+
+  if [[ "$REMOTE_TAG_COMMIT" != "$HEAD_COMMIT" ]]; then
+    die "Tag ${TAG} already exists on origin but points at commit ${REMOTE_TAG_COMMIT}, not HEAD (${HEAD_COMMIT}). If this is unintended, run: git push origin :refs/tags/${TAG} && git tag -d ${TAG}, then re-run this script."
+  fi
+
+  log "Tag ${TAG} already exists on origin and points at HEAD. Skipping tag creation/push."
 else
   if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
     log "Tag ${TAG} exists locally but not on origin. Pushing existing tag."
@@ -75,6 +111,7 @@ RUN_ID=""
 elapsed=0
 while [[ "$elapsed" -lt "$CI_POLL_TIMEOUT" ]]; do
   RUN_ID="$(gh run list \
+    -R "$OWNER_REPO" \
     --workflow "$WORKFLOW_FILE" \
     --json databaseId,headBranch,status,conclusion,createdAt \
     --jq "[.[] | select(.headBranch == \"${TAG}\")] | sort_by(.createdAt) | last | .databaseId // empty")"
@@ -92,9 +129,9 @@ done
 
 log "Found CI run ${RUN_ID}. Waiting for it to complete..."
 
-if ! gh run watch "$RUN_ID" --exit-status; then
-  gh run view "$RUN_ID" || true
-  die "CI run ${RUN_ID} failed. See details above (or run 'gh run view ${RUN_ID} --log-failed')."
+if ! gh run watch "$RUN_ID" -R "$OWNER_REPO" --exit-status; then
+  gh run view "$RUN_ID" -R "$OWNER_REPO" || true
+  die "CI run ${RUN_ID} failed. See details above (or run 'gh run view ${RUN_ID} -R ${OWNER_REPO} --log-failed')."
 fi
 
 log "CI run ${RUN_ID} completed successfully."
@@ -106,7 +143,7 @@ ARTIFACT_NAME="libav-vrew-dist-${TAG}"
 log "Downloading artifact ${ARTIFACT_NAME}..."
 
 rm -rf dist
-gh run download "$RUN_ID" -n "$ARTIFACT_NAME" -D dist
+gh run download "$RUN_ID" -R "$OWNER_REPO" -n "$ARTIFACT_NAME" -D dist
 
 # The workflow uploads with `path: dist/`, so the artifact root should
 # already correspond to the contents of dist/. If gh nests it as
