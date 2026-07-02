@@ -64,3 +64,4 @@
 --enable-protocol=file
 --enable-protocol=data
 --enable-muxer=hls
+--enable-swresample --enable-filter=aresample
