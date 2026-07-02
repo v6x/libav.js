@@ -27,7 +27,8 @@
     "build": "npm run generate-config && npm run generate-makefile && bash -c 'source ./.emsdk/emsdk_env.sh && make build-vrew -j9'",
     "release": "rm -rf dist && npm run generate-makefile && bash -c 'source ./.emsdk/emsdk_env.sh && make release -j9'",
     "generate-config": "cd configs && CONFIG_CONTENT=$(cat ./configs/vrew/config.json) && ./mkconfig.js vrew \"$CONFIG_CONTENT\" && cd ..",
-    "test": "npm run build && cd tests && node node-test.js --include-slow && node node-test.mjs"
+    "test:all": "npm run build && cd tests && node node-test.js --include-slow && node node-test.mjs",
+    "test": "vitest run --config tests/vrew/vitest.config.ts"
   },
   "repository": {
     "type": "git",
@@ -40,9 +41,12 @@
   },
   "homepage": "https://github.com/Yahweasel/libav.js#readme",
   "devDependencies": {
+    "@types/node": "^20.11.0",
     "fast-xml-parser": "^4.5.0",
     "rimraf": "^6.0.1",
-    "terser": "^5.34.1"
+    "terser": "^5.34.1",
+    "typescript": "^5.4.0",
+    "vitest": "^2.1.0"
   },
   "packageManager": "yarn@1.22.22+sha512.a6b2f7906b721bba3d67d4aff083df04dad64c399707841b7acf00f6b133b7ac24255f2652fa22ae3534329dc6180534e98d17432037ff6fd140556e2bb3137e"
 }

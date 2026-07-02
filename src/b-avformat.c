@@ -448,8 +448,6 @@ static int transcode_mp3_select_sample_rate(const AVCodec *codec, int src_rate) 
         return src_rate;
     }
 
-    /* Prefer the source rate itself, then the highest supported rate below it
-     * (no upsampling), and as a last resort the lowest supported rate. */
     int below = 0, lowest = rates[0];
     for (int i = 0; i < n; i++) {
         if (rates[i] == src_rate) return src_rate;
@@ -471,6 +469,25 @@ static enum AVSampleFormat transcode_mp3_select_sample_fmt(const AVCodec *codec)
         if (fmts[i] == AV_SAMPLE_FMT_S16P) return AV_SAMPLE_FMT_S16P;
     }
     return fmts[0];
+}
+
+static int transcode_mp3_select_channels(const AVCodec *codec, int requested,
+                                         int src_channels) {
+    int desired = requested > 0 ? requested : FFMIN(src_channels, 2);
+    desired = FFMAX(desired, 1);
+
+    const AVChannelLayout *layouts = NULL;
+    int n = 0;
+    if (avcodec_get_supported_config(NULL, codec, AV_CODEC_CONFIG_CHANNEL_LAYOUT,
+                                     0, (const void **)&layouts, &n) < 0 ||
+        !layouts || n <= 0) {
+        return FFMIN(desired, 2);
+    }
+    int max_ch = 0;
+    for (int i = 0; i < n; i++) {
+        max_ch = FFMAX(max_ch, layouts[i].nb_channels);
+    }
+    return max_ch > 0 ? FFMIN(desired, max_ch) : desired;
 }
 
 static int transcode_mp3_convert_to_fifo(SwrContext *swr, AVAudioFifo *fifo,
@@ -589,9 +606,8 @@ int ff_convert_audio_to_mp3(const char *in_filename, const char *out_filename,
         goto fail;
     }
 
-    int nb_channels = out_channels > 0 ? out_channels
-                                       : FFMIN(dec_ctx->ch_layout.nb_channels, 2);
-    if (nb_channels < 1) nb_channels = 1;
+    int nb_channels = transcode_mp3_select_channels(
+        encoder, out_channels, dec_ctx->ch_layout.nb_channels);
     av_channel_layout_default(&enc_ctx->ch_layout, nb_channels);
     enc_ctx->sample_rate = transcode_mp3_select_sample_rate(encoder, dec_ctx->sample_rate);
     enc_ctx->sample_fmt = transcode_mp3_select_sample_fmt(encoder);
