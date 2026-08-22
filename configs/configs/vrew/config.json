@@ -38,6 +38,7 @@
   "protocol-file",
   "protocol-data",
   "workerfs",
+  "demuxer-hls",
   "muxer-hls",
   "avformat",
   "avcodec",
