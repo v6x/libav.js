@@ -1,0 +1,300 @@
+--- a/libavformat/jsfetch.c
++++ b/libavformat/jsfetch.c
+@@ -28,11 +28,15 @@
+ #include <emscripten.h>
+ #include <errno.h>
+ 
++#define JSFETCH_INITIAL_RANGE_SIZE (64 * 1024)
++#define JSFETCH_MAX_RANGE_SIZE (1024 * 1024)
++
+ typedef struct JSFetchContext {
+     const AVClass *class;
+     // All of the real information is stored in a JavaScript structure
+     int idx;
+     uint64_t off, filesize;
++    uint32_t range_size;
+     int seekable;
+ } JSFetchContext;
+ 
+@@ -51,66 +55,88 @@
+ /**
+  * Open a fetch connection (JavaScript side).
+  */
+-EM_JS(int, jsfetch_open_js, (const char *url, uint32_t start_lo, uint32_t start_hi), {
+-    return Asyncify.handleAsync(function() {
+-            url = UTF8ToString(url);
+-            var credentialsPrefix = "jsfetch:credentials:";
+-            var includeCredentials = url.slice(0, credentialsPrefix.length) === credentialsPrefix;
+-            var fetchUrl = includeCredentials ? url.slice(credentialsPrefix.length) :
+-                (url.slice(0, 8) === "jsfetch:" ? url.slice(8) : url);
+-            var start_offset = (BigInt(start_lo >>> 0) | (BigInt(start_hi >>> 0) << 32n));
+-        return Promise.all([]).then(function() {
+-            var fetchOptions = includeCredentials ? { credentials: "include" } : {};
+-            
+-            if (start_offset > 0) {
+-                fetchOptions.headers = {
+-                    'Range': 'bytes=' + start_offset.toString() + '-'
+-                };
++EM_JS(int, jsfetch_open_js, (int old_idx, const char *url, uint32_t start_lo, uint32_t start_hi, uint32_t range_size, int protocol_error), {
++    return Asyncify.handleAsync(async function() {
++        url = UTF8ToString(url);
++        var credentialsPrefix = "jsfetch:credentials:";
++        var includeCredentials = url.slice(0, credentialsPrefix.length) === credentialsPrefix;
++        var fetchUrl = includeCredentials ? url.slice(credentialsPrefix.length) :
++            (url.slice(0, 8) === "jsfetch:" ? url.slice(8) : url);
++        var startOffset = BigInt(start_lo >>> 0) | (BigInt(start_hi >>> 0) << 32n);
++        var requestedEnd = startOffset + BigInt(range_size) - 1n;
++        var abortController = new AbortController();
++
++        try {
++            var fetchOptions = {
++                headers: { Range: "bytes=" + startOffset.toString() + "-" + requestedEnd.toString() },
++                signal: abortController.signal,
++            };
++            if (includeCredentials)
++                fetchOptions.credentials = "include";
++
++            var response = await fetch(fetchUrl, fetchOptions);
++            if (!response.body) {
++                abortController.abort();
++                return protocol_error;
++            }
++
++            var filesize = 0;
++            if (response.status === 206) {
++                var contentRange = response.headers.get("Content-Range");
++                var match = contentRange && contentRange.match(/^bytes (\\\\d+)-(\\\\d+)\\\\/(\\\\d+)$/);
++                if (!match) {
++                    abortController.abort();
++                    return protocol_error;
++                }
++
++                var responseStart = BigInt(match[1]);
++                var responseEnd = BigInt(match[2]);
++                var total = BigInt(match[3]);
++                var expectedEnd = requestedEnd < total ? requestedEnd : total - 1n;
++                if (responseStart !== startOffset ||
++                    responseEnd !== expectedEnd ||
++                    responseStart > responseEnd ||
++                    responseEnd >= total) {
++                    abortController.abort();
++                    return protocol_error;
++                }
++                filesize = Number(total);
++            } else if (response.status !== 200 || startOffset !== 0n) {
++                abortController.abort();
++                return protocol_error;
+             }
+-            
+-            // Create AbortController for cancellation
+-            var abortController = new AbortController();
+-            fetchOptions.signal = abortController.signal;
+-            
+-            return fetch(fetchUrl, fetchOptions).then(function(response) {
+-                return {response: response, abortController: abortController};
+-            });
+-        }).then(function(result) {
+-            var response = result.response;
+-            var abortController = result.abortController;
++
++            var reader = response.body.getReader();
+             if (!Module.libavjsJSFetch)
+                 Module.libavjsJSFetch = {ctr: 1, fetches: {}};
+             var jsf = Module.libavjsJSFetch;
++            if (old_idx > 0 && jsf.fetches[old_idx]) {
++                try {
++                    jsf.fetches[old_idx].buf = null;
++                    jsf.fetches[old_idx].reader.cancel();
++                    if (jsf.fetches[old_idx].abortController)
++                        jsf.fetches[old_idx].abortController.abort();
++                } catch (ex) {}
++                delete jsf.fetches[old_idx];
++            }
++
+             var idx = jsf.ctr++;
+-            var reader = response.body.getReader();
+-            var jsfo = jsf.fetches[idx] = {
++            jsf.fetches[idx] = {
+                 url: fetchUrl,
+                 response: response,
+                 reader: reader,
+                 abortController: abortController,
+                 buf: null,
+                 rej: null,
+-                filesize: 0,
+-            };
+-            
+-            var contentLength = response.headers.get('Content-Length');
+-            var contentRange = response.headers.get('Content-Range');
+-            
+-            if (contentRange) {
+-                // Parse "bytes start-end/total" format
+-                var match = contentRange.match(/bytes \\\\d+-\\\\d+\\\\/(\\\\d+)/);
+-                if (match) {
+-                    jsfo.filesize = parseInt(match[1]);
+-                }
+-            } else if (contentLength && start_offset === 0n) {
+-                jsfo.filesize = parseInt(contentLength);
+-            }
++                filesize: filesize,
++            };
+             return idx;
+-        }).catch(function(ex) {
++        } catch (ex) {
++            abortController.abort();
+             Module.fsThrownError = ex;
+             console.error(ex);
+             return -11 /* ECANCELED */;
+-        });
++        }
+     });
+ });
+ 
+@@ -133,8 +159,9 @@
+ {
+     JSFetchContext *ctx = h->priv_data;
+     ctx->off = 0;
++    ctx->range_size = JSFETCH_INITIAL_RANGE_SIZE;
+     ctx->seekable = -1; // probe seekability
+-    ctx->idx = jsfetch_open_js(url, 0, 0);
++    ctx->idx = jsfetch_open_js(0, url, 0, 0, ctx->range_size, AVERROR(EIO));
+     
+     if (ctx->idx > 0) {
+         // If we got a filesize, assume seekable. Otherwise keep as streaming.
+@@ -204,75 +231,24 @@
+     JSFetchContext *ctx = h->priv_data;
+     int ret = jsfetch_read_js(ctx->idx, buf, size);
+     if (ret > 0) ctx->off += ret;
++    if (ret != AVERROR_EOF || !ctx->filesize || ctx->off >= ctx->filesize)
++        return ret;
++
++    if (ctx->range_size < JSFETCH_MAX_RANGE_SIZE)
++        ctx->range_size *= 2;
++    uint32_t lo = (uint32_t)(ctx->off & 0xFFFFFFFF);
++    uint32_t hi = (uint32_t)(ctx->off >> 32);
++    int new_idx = jsfetch_open_js(ctx->idx, h->filename, lo, hi,
++                                  ctx->range_size, AVERROR(EIO));
++    if (new_idx < 0)
++        return new_idx;
++
++    ctx->idx = new_idx;
++    ret = jsfetch_read_js(ctx->idx, buf, size);
++    if (ret > 0) ctx->off += ret;
+     return ret;
+ }
+ 
+-EM_JS(int, jsfetch_seek_js, (int old_idx, const char *url, uint32_t start_lo, uint32_t start_hi), {
+-    return Asyncify.handleAsync(function () {
+-        url = UTF8ToString(url);
+-        var credentialsPrefix = "jsfetch:credentials:";
+-        var includeCredentials = url.slice(0, credentialsPrefix.length) === credentialsPrefix;
+-        var fetchUrl = includeCredentials ? url.slice(credentialsPrefix.length) :
+-            (url.slice(0, 8) === "jsfetch:" ? url.slice(8) : url);
+-        var start_offset = (BigInt(start_lo >>> 0) | (BigInt(start_hi >>> 0) << 32n));
+-        return Promise.all([])
+-          .then(function () {
+-            var fetchOptions = {
+-              headers: { Range: "bytes=" + start_offset.toString() + "-" },
+-            };
+-            if (includeCredentials)
+-              fetchOptions.credentials = "include";
+-            var abortController = new AbortController();
+-            fetchOptions.signal = abortController.signal;
+-            return fetch(fetchUrl, fetchOptions).then(function (response) {
+-              return { response: response, abortController: abortController };
+-            });
+-          })
+-          .then(function (result) {
+-            var response = result.response;
+-            var abortController = result.abortController;
+-            if (!Module.libavjsJSFetch)
+-              Module.libavjsJSFetch = { ctr: 1, fetches: {} };
+-            var jsf = Module.libavjsJSFetch;
+-            if (old_idx > 0 && jsf.fetches[old_idx]) {
+-              try {
+-                jsf.fetches[old_idx].buf = null;
+-                jsf.fetches[old_idx].reader.cancel();
+-                if (jsf.fetches[old_idx].abortController) {
+-                  jsf.fetches[old_idx].abortController.abort();
+-                }
+-              } catch (ex) {}
+-              delete jsf.fetches[old_idx];
+-            }
+-            var idx = jsf.ctr++;
+-            var reader = response.body.getReader();
+-            var jsfo = (jsf.fetches[idx] = {
+-              url: fetchUrl,
+-              response: response,
+-              reader: reader,
+-              abortController: abortController,
+-              buf: null,
+-              rej: null,
+-              filesize: 0,
+-            });
+-            var contentRange = response.headers.get("Content-Range");
+-            if (contentRange) {
+-              var match = contentRange.match(/bytes \\\\d+-\\\\d+\\\\/(\\\\d+)/);
+-              if (match) {
+-                jsfo.filesize = parseInt(match[1]);
+-              }
+-            }
+-
+-            return idx;
+-          })
+-          .catch(function (ex) {
+-            Module.fsThrownError = ex;
+-            console.error(ex);
+-            return -11;
+-          });
+-      });
+-});
+-
+ /**
+  * Close a fetch connection (JavaScript side).
+  */
+@@ -295,7 +271,6 @@
+ static int64_t jsfetch_seek(URLContext *h, int64_t off, int whence)
+ {
+     JSFetchContext *ctx = h->priv_data;
+-    int64_t old_off = ctx->off;
+     
+     if (whence == AVSEEK_SIZE)
+         return ctx->filesize;
+@@ -314,19 +289,20 @@
+     if (off < 0)
+         return AVERROR(EINVAL);
+ 
+-    if (ctx->off && h->is_streamed)
++    if (off && h->is_streamed)
+         return AVERROR(ENOSYS);
+ 
+     uint32_t lo=0, hi=0;
+     lo = (uint32_t)(off & 0xFFFFFFFF);
+     hi = (uint32_t)(off >> 32);
+-    int new_idx = jsfetch_seek_js(ctx->idx, h->filename, lo, hi);
+-    if (new_idx < 0) {
+-      return ctx->off;
+-    }
++    int new_idx = jsfetch_open_js(ctx->idx, h->filename, lo, hi,
++                                 JSFETCH_INITIAL_RANGE_SIZE, AVERROR(EIO));
++    if (new_idx < 0)
++        return new_idx;
+ 
+     ctx->off = off;
+     ctx->idx = new_idx;
++    ctx->range_size = JSFETCH_INITIAL_RANGE_SIZE;
+ 
+     return off;
+ }
+--- a/libavformat/matroskadec.c
++++ b/libavformat/matroskadec.c
+@@ -4360,7 +4360,8 @@ static int matroska_read_seek(AVFormatContext *s, int stream_index,
+     }
+ 
+     /* We seek to a level 1 element, so set the appropriate status. */
+-    matroska_reset_status(matroska, 0, sti->index_entries[index].pos);
++    if (matroska_reset_status(matroska, 0, sti->index_entries[index].pos) < 0)
++        goto err;
+     if (flags & AVSEEK_FLAG_ANY) {
+         sti->skip_to_keyframe = 0;
+         matroska->skip_to_timecode = timestamp;

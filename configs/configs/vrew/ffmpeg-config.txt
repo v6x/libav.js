@@ -63,5 +63,6 @@
 --enable-protocol=jsfetch
 --enable-protocol=file
 --enable-protocol=data
+--enable-demuxer=hls
 --enable-muxer=hls
 --enable-swresample --enable-filter=aresample

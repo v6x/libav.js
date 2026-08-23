@@ -2,7 +2,7 @@ Index: ffmpeg-8.0/libavformat/jsfetch.c
 ===================================================================
 --- ffmpeg-8.0.orig/libavformat/jsfetch.c
 +++ ffmpeg-8.0/libavformat/jsfetch.c
-@@ -51,16 +51,17 @@ static const AVClass jsfetch_context_class = {
+@@ -51,16 +51,20 @@
  /**
   * Open a fetch connection (JavaScript side).
   */
@@ -10,10 +10,15 @@ Index: ffmpeg-8.0/libavformat/jsfetch.c
 +EM_JS(int, jsfetch_open_js, (const char *url, uint32_t start_lo, uint32_t start_hi), {
      return Asyncify.handleAsync(function() {
              url = UTF8ToString(url);
-             var fetchUrl = url.slice(0, 8) === "jsfetch:" ? url.slice(8) : url;
+-            var fetchUrl = url.slice(0, 8) === "jsfetch:" ? url.slice(8) : url;
++            var credentialsPrefix = "jsfetch:credentials:";
++            var includeCredentials = url.slice(0, credentialsPrefix.length) === credentialsPrefix;
++            var fetchUrl = includeCredentials ? url.slice(credentialsPrefix.length) :
++                (url.slice(0, 8) === "jsfetch:" ? url.slice(8) : url);
 +            var start_offset = (BigInt(start_lo >>> 0) | (BigInt(start_hi >>> 0) << 32n));
          return Promise.all([]).then(function() {
-             var fetchOptions = {};
+-            var fetchOptions = {};
++            var fetchOptions = includeCredentials ? { credentials: "include" } : {};
              
              if (start_offset > 0) {
                  fetchOptions.headers = {
@@ -22,7 +27,7 @@ Index: ffmpeg-8.0/libavformat/jsfetch.c
                  };
              }
              
-@@ -98,7 +99,7 @@ EM_JS(int, jsfetch_open_js, (const char *url, uint64_t start_offset), {
+@@ -98,7 +102,7 @@
                  if (match) {
                      jsfo.filesize = parseInt(match[1]);
                  }
@@ -31,7 +36,7 @@ Index: ffmpeg-8.0/libavformat/jsfetch.c
                  jsfo.filesize = parseInt(contentLength);
              }
              return idx;
-@@ -113,9 +114,13 @@ EM_JS(int, jsfetch_open_js, (const char *url, uint64_t start_offset), {
+@@ -113,9 +117,13 @@
  /**
   * Get file size from JavaScript side.
   */
@@ -47,7 +52,7 @@ Index: ffmpeg-8.0/libavformat/jsfetch.c
  });
  
  /**
-@@ -126,11 +131,13 @@ static int jsfetch_open(URLContext *h, const char *url, int flags, AVDictionary
+@@ -126,11 +134,13 @@
      JSFetchContext *ctx = h->priv_data;
      ctx->off = 0;
      ctx->seekable = -1; // probe seekability
@@ -63,7 +68,7 @@ Index: ffmpeg-8.0/libavformat/jsfetch.c
          if (ctx->filesize > 0) {
              h->is_streamed = 0;
              ctx->seekable = 1;
-@@ -192,17 +199,20 @@ EM_JS(int, jsfetch_read_js, (int idx, unsigned char *toBuf, int size), {
+@@ -192,18 +202,26 @@
  static int jsfetch_read(URLContext *h, unsigned char *buf, int size)
  {
      JSFetchContext *ctx = h->priv_data;
@@ -77,7 +82,11 @@ Index: ffmpeg-8.0/libavformat/jsfetch.c
 +EM_JS(int, jsfetch_seek_js, (int old_idx, const char *url, uint32_t start_lo, uint32_t start_hi), {
      return Asyncify.handleAsync(function () {
          url = UTF8ToString(url);
-         var fetchUrl = url.slice(0, 8) === "jsfetch:" ? url.slice(8) : url;
+-        var fetchUrl = url.slice(0, 8) === "jsfetch:" ? url.slice(8) : url;
++        var credentialsPrefix = "jsfetch:credentials:";
++        var includeCredentials = url.slice(0, credentialsPrefix.length) === credentialsPrefix;
++        var fetchUrl = includeCredentials ? url.slice(credentialsPrefix.length) :
++            (url.slice(0, 8) === "jsfetch:" ? url.slice(8) : url);
 +        var start_offset = (BigInt(start_lo >>> 0) | (BigInt(start_hi >>> 0) << 32n));
          return Promise.all([])
            .then(function () {
@@ -85,9 +94,12 @@ Index: ffmpeg-8.0/libavformat/jsfetch.c
 -              headers: { Range: "bytes=" + start_offset + "-" },
 +              headers: { Range: "bytes=" + start_offset.toString() + "-" },
              };
++            if (includeCredentials)
++              fetchOptions.credentials = "include";
              var abortController = new AbortController();
              fetchOptions.signal = abortController.signal;
-@@ -295,17 +305,19 @@ static int64_t jsfetch_seek(URLContext *h, int64_t off, int whence)
+             return fetch(fetchUrl, fetchOptions).then(function (response) {
+@@ -295,17 +313,19 @@
          return AVERROR(EINVAL);
      if (off < 0)
          return AVERROR(EINVAL);
